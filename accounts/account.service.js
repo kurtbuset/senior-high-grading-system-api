@@ -180,10 +180,10 @@ async function update(id, params) {
   return basicDetails(account)
 }
 
-async function _delete(id) {
-  const account = await getAccount(id)
-  await account.destroy()
-}
+// async function _delete(id) {
+//   const account = await getAccount(id)
+//   await account.destroy()
+// }
 
 async function getAccount(id) {
   const account = await db.Account.findByPk(id)

@@ -20,7 +20,7 @@ router.get('/', authorize(Role.Admin), getAll)
 router.get('/:id', authorize(), getById)
 router.post('/', authorize(Role.Admin), createSchema, create)
 router.put('/:id', authorize(), updateSchema, update)
-router.delete('/:id', authorize(), _delete)
+// router.delete('/:id', authorize(), _delete)
   
 module.exports = router
 
@@ -215,15 +215,15 @@ function update(req, res, next){
 }
 
 
-function _delete(req, res, next){
-  if(Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin){
-    return res.status(401).json({ msg: 'Unauthorized'} )
-  }
+// function _delete(req, res, next){
+//   if(Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin){
+//     return res.status(401).json({ msg: 'Unauthorized'} )
+//   }
 
-  accountService.delete(req.params.id)
-    .then(_ => res.json({ msg: 'Account deleted successfully'}))
-    .catch(next)
-}
+//   accountService.delete(req.params.id)
+//     .then(_ => res.json({ msg: 'Account deleted successfully'}))
+//     .catch(next)
+// }
 
 // helper function
 
