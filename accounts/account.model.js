@@ -10,6 +10,7 @@ function model(sequelize){
     firstName: { type: DataTypes.STRING, allowNull: false },
     lastName: { type: DataTypes.STRING, allowNull: false },
     acceptTerms: { type: DataTypes.BOOLEAN },
+    isActive: { type: DataTypes.BOOLEAN },
     role: { type: DataTypes.STRING, allowNull: false },
     verificationToken: { type: DataTypes.STRING },
     verified: { type: DataTypes.DATE },
@@ -20,7 +21,7 @@ function model(sequelize){
     updated: { type: DataTypes.DATE },  
     isVerified: {
       type: DataTypes.VIRTUAL,
-      get() { return !!(!this.verified || this.passwordReset) }
+      get() { return !!(this.verified || this.passwordReset) }
     }
   }
 

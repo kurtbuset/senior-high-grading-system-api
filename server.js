@@ -11,12 +11,16 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true}))
 app.use(cookieParser())
 
+// ilisda ang origin if production na
+// e.g. origin: 'https://your-frontend-domain.com',
 app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'))
 
-  app.use('/api-docs', require('./_helpers/swagger'))
+app.use('/departments', require('./departments/departments.controller'))
+
+app.use('/api-docs', require('./_helpers/swagger'))
 
 // global error handler
 app.use(errorHandler)

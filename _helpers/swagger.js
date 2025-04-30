@@ -10,4 +10,4 @@ const swaggerDocument = YAML.load(yamlPath)
 
 router.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
-module.exports = router 
+module.exports = router   

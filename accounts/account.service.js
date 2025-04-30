@@ -27,12 +27,13 @@ async function authenticate({ email, password, ipAddress }){
   const account = await db.Account.scope('withHash').findOne({ where: { email}})
 
   if(!account || !account.isVerified || !(await bcrypt.compare(password, account.passwordHash))){
-    throw 'Email of password is incorrect'
-  }
-
+    throw 'Email or password is incorrect'
+  } 
+  // console.log(account.dataValues)
   const jwtToken = generateJwtToken(account)
+  // console.log("JWT token:", jwtToken) 
   const refreshToken = generateRefreshToken(account, ipAddress)
-
+  // console.log(refreshToken.dataValues)
   await refreshToken.save()
 
   return {
@@ -49,6 +50,7 @@ async function refreshToken({ token, ipAddress }) {
 
   const newRefreshToken = generateRefreshToken(account, ipAddress)
   refreshToken.revoked = Date.now()
+  // console.log('revoked col: ', refreshToken.revoked)
   refreshToken.revokedByIp = ipAddress
   refreshToken.replacedByToken = newRefreshToken.token
   await refreshToken.save()
@@ -80,12 +82,12 @@ async function register(params, origin) {
 
   // create account object
   const account = new db.Account(params)
-
+  
   // first registered account is an admin
   const isFirstAccount = (await db.Account.count()) === 0
   account.role = isFirstAccount ? Role.Admin : Role.User
   account.verificationToken = randomTokenString()
-
+  account.isActive = true
   // hash password
   account.passwordHash = await hash(params.password)
 
@@ -156,7 +158,7 @@ async function create(params) {
 
   const account = new db.Account(params)
   account.verified = Date.now()
-
+  account.isActive = true
   account.passwordHash = await hash(params.password)
 
   await account.save()
@@ -204,7 +206,7 @@ async function hash(password) {
 }
 
 function generateJwtToken(account){
-  return jwt.sign({ sub: account.id, id: account.id}, config.secret, { expiresIn: '15m'})
+  return jwt.sign({ sub: account.id, id: account.id}, config.secret, { expiresIn: '15m'}) 
 }
 
 function generateRefreshToken(account, ipAddress){
@@ -223,9 +225,9 @@ function randomTokenString(){
 }
 
 function basicDetails(account){
-  const { id, title, firstName, lastName, email, role, created, updated, isVerified } = account
+  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive } = account
   
-  return { id, title, firstName, lastName, email, role, created, updated, isVerified }
+  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive }
 }
 
 

@@ -8,7 +8,7 @@ function authorize(roles = []){
   if(typeof roles === 'string'){
     roles = [roles]
   }
-
+  
   console.log(roles)
 
   return [

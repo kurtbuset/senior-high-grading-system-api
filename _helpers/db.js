@@ -12,6 +12,7 @@ async function initialize(){
   const sequelize = new Sequelize(database, user, password, { dialect: 'mysql' })
 
   db.Account = require('../accounts/account.model')(sequelize)
+  db.Department = require('../departments/department.model')(sequelize)
   db.refreshToken = require('../accounts/refresh-token.model')(sequelize)
 
   db.Account.hasMany(db.refreshToken, { onDelete: 'CASCADE' })
