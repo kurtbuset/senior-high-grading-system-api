@@ -1,4 +1,3 @@
-const { func } = require('joi')
 const { DataTypes } = require('sequelize')
 
 module.exports = model

@@ -22,7 +22,6 @@ function _delete(req, res, next){
   departmentService.delete(req.params.id)
     .then(() => res.json({ msg: 'Department deleted successfully'}))
     .catch(next)
-    
 }
 
 function getById(req, res, next){

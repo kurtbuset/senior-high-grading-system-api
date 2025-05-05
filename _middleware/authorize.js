@@ -9,8 +9,6 @@ function authorize(roles = []){
     roles = [roles]
   }
   
-  console.log(roles)
-
   return [
     jwt({ secret, algorithms: ['HS256']}),
 

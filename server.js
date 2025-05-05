@@ -20,6 +20,8 @@ app.use('/accounts', require('./accounts/accounts.controller'))
 
 app.use('/departments', require('./departments/departments.controller'))
 
+app.use('/employees', require('./employees/employees.controller'))
+
 app.use('/api-docs', require('./_helpers/swagger'))
 
 // global error handler

@@ -29,11 +29,14 @@ async function authenticate({ email, password, ipAddress }){
   if(!account || !account.isVerified || !(await bcrypt.compare(password, account.passwordHash))){
     throw 'Email or password is incorrect'
   } 
+
+  if(!account.isActive){
+    throw 'Account is inactive. Please contact administrator bitch'
+  }
+  
   // console.log(account.dataValues)
   const jwtToken = generateJwtToken(account)
-  // console.log("JWT token:", jwtToken) 
   const refreshToken = generateRefreshToken(account, ipAddress)
-  // console.log(refreshToken.dataValues)
   await refreshToken.save()
 
   return {
@@ -142,7 +145,9 @@ async function resetPassword({ token, password}) {
 }
 
 async function getAll() {
-  const accounts = await db.Account.findAll()
+  const accounts = await db.Account.findAll({
+    include: db.Employee
+  })
   return accounts.map(x => basicDetails(x))
 }
 
@@ -158,7 +163,7 @@ async function create(params) {
 
   const account = new db.Account(params)
   account.verified = Date.now()
-  account.isActive = true
+  // account.isActive = true
   account.passwordHash = await hash(params.password)
 
   await account.save()
@@ -225,9 +230,10 @@ function randomTokenString(){
 }
 
 function basicDetails(account){
-  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive } = account
+  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee } = account
+  console.log(JSON.stringify(account, null, 2))
   
-  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive }
+  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee }
 }
 
 

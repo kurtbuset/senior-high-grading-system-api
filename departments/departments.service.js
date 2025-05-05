@@ -43,7 +43,7 @@ async function create(params) {
 
   await department.save()
 
-  return basicDetails(department)
+  return basicDetails(department) 
 }
 
 function basicDetails(department){
