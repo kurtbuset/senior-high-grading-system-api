@@ -1,7 +1,24 @@
 module.exports = {
   create,
   getAll,
-  getById
+  getById,
+  update,
+  delete: _delete
+}
+
+async function _delete(id) {
+  const employee = await getEmployee(id)
+  await employee.destroy()
+}
+
+async function update(id, params) {
+  const employee = await getEmployee(id)
+
+  Object.assign(employee, params)
+  employee.updated = Date.now()
+  await employee.save() 
+
+  return basicDetails(employee)
 }
 
 async function getById(id) {

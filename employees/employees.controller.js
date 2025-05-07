@@ -9,8 +9,46 @@ const employeeService = require('../employees/employees.service')
 router.get("/", authorize(Role.Admin), getAll)
 router.get("/:id", authorize(), getById)
 router.post("/", authorize(Role.Admin), createSchema, create)
+router.put('/:id', authorize(), updateSchema, update)
+router.delete('/:id', authorize(), _delete)
 
 module.exports = router
+
+function _delete(req, res, next){
+  if (req.user.role !== Role.Admin) {
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
+
+  employeeService
+    .delete(req.params.id)
+    .then(() => res.json({ msg: 'Employee deleted successfully'}))
+    .catch(next)
+}
+
+function updateSchema(req, res, next){
+  const schema = Joi.object({
+    position: Joi.string().empty(""),
+    userId: Joi.number().empty(""),
+    departmentId: Joi.number().empty(""),
+    isActive: Joi.boolean()
+  })
+  validateRequest(req, next, schema)
+}
+
+function update(req, res, next){
+  if(req.user.role !== Role.Admin){
+    return res.status(401).json({ msg: 'Unauthorized' })
+  }
+
+  employeeService
+    .update(req.params.id, req.body)
+    .then((employee) => {
+      res.json(employee)
+      // console.log(employee)
+    })
+    .catch(next)
+    
+}
 
 function getById(req, res, next){
   if(req.user.role !== Role.Admin){

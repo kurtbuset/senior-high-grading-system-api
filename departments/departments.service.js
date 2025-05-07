@@ -24,6 +24,10 @@ async function getDepartment(id){
 }
 
 async function update(id, params){
+  if(await db.Department.findOne({ where: { name: params.name }})){
+    throw `Name '${params.name}' is already existed`
+  }
+  
   const department = await getDepartment(id)
 
   Object.assign(department, params)
@@ -35,10 +39,15 @@ async function update(id, params){
 
 async function getAll(){
   const departments = await db.Department.findAll()
+
   return departments.map(x => basicDetails(x))
 }
 
 async function create(params) {
+  if(await db.Department.findOne({ where: { name: params.name }})){
+    throw `Name '${params.name}' is already existed`
+  }
+
   const department = new db.Department(params)
 
   await department.save()
@@ -47,6 +56,7 @@ async function create(params) {
 }
 
 function basicDetails(department){
-  const { id, name, description } = department
-  return { id, name, description }
+  console.log(JSON.stringify(department, null, 2))
+  const { id, name, description, employeeCount } = department
+  return { id, name, description, employeeCount }
 }
