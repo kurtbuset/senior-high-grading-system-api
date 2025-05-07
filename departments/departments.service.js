@@ -1,3 +1,5 @@
+const { fn, col } = require('sequelize')
+
 module.exports = {
   create,
   getAll,
@@ -38,8 +40,21 @@ async function update(id, params){
 }
 
 async function getAll(){
-  const departments = await db.Department.findAll()
-
+  const departments = await db.Department.findAll({
+    attributes: {
+      include: [
+        [fn('COUNT', col('employees.id')), 'employeeCount']
+      ]
+    },
+    include: [
+      {
+        model: db.Employee,
+        attributes: [], // Do not fetch employee details, just count
+      }
+    ],
+    group: ['departments.id']
+  })
+  
   return departments.map(x => basicDetails(x))
 }
 
@@ -56,7 +71,8 @@ async function create(params) {
 }
 
 function basicDetails(department){
-  console.log(JSON.stringify(department, null, 2))
-  const { id, name, description, employeeCount } = department
+  // console.log(JSON.stringify(department, null, 2))
+  const { id, name, description } = department
+  const employeeCount = department.get('employeeCount')
   return { id, name, description, employeeCount }
 }

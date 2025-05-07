@@ -13,11 +13,7 @@ router.post("/revoke-token", authorize(), revokeTokenSchema, revokeToken);
 router.post("/register", registerSchema, register);
 router.post("/verify-email", verifyEmailSchema, verifyEmail);
 router.post("/forgot-password", forgotPasswordSchema, forgotPassword);
-router.post(
-  "/validate-reset-token",
-  validateResetTokenSchema,
-  validateResetToken
-);
+router.post("/validate-reset-token", validateResetTokenSchema, validateResetToken);
 router.post("/reset-password", resetPasswordSchema, resetPassword);
 
 router.get("/", authorize(Role.Admin), getAll);
