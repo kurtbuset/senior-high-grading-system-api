@@ -22,6 +22,8 @@ app.use('/departments', require('./departments/departments.controller'))
 
 app.use('/employees', require('./employees/employees.controller'))
 
+app.use('/requests', require('./requests/request.controller'))
+
 app.use('/api-docs', require('./_helpers/swagger'))
 
 // global error handler

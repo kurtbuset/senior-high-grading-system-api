@@ -15,6 +15,7 @@ async function initialize(){
   db.Department = require('../departments/department.model')(sequelize)
   db.refreshToken = require('../accounts/refresh-token.model')(sequelize)
   db.Employee = require('../employees/employee.model')(sequelize)
+  db.Request = require('../requests/request.model')(sequelize)
 
   // one to many (account -> refreshToken)
   db.Account.hasMany(db.refreshToken, { onDelete: 'CASCADE' })
@@ -38,6 +39,16 @@ async function initialize(){
   db.Employee.belongsTo(db.Department, {
     foreignKey: 'departmentId'
   })
+
+  db.Employee.hasMany(db.Request, {
+    foreignKey: 'employeeId',
+    onDelete: 'CASCADE'
+  })
+  db.Request.belongsTo(db.Employee, {
+    foreignKey: 'employeeId'
+  })
+
+  // one to many (employee -> requests)
 
   await sequelize.sync({ alter: true })
 }
