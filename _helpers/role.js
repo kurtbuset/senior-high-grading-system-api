@@ -1,5 +1,6 @@
 module.exports = {
   Admin: 'Admin',
-  User: 'User'
+  // User: 'User'
+  Teacher: 'Teacher'
 }
 

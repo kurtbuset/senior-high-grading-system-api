@@ -6,15 +6,15 @@ module.exports = authorize
 
 function authorize(roles = []){
   if(typeof roles === 'string'){
-    roles = [roles]
+    roles = [roles] 
   }
-  
+
   return [
     jwt({ secret, algorithms: ['HS256']}),
-
+    
     async (req, res, next) => {
       const account = await db.Account.findByPk(req.user.id)
-
+      // console.log('ACCOUNT: ', JSON.stringify(account, null, 2))
       if(!account || (roles.length && !roles.includes(account.role))){
         return res.status(401).json({ msg: 'Unauthorized' })
       }

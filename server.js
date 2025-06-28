@@ -18,16 +18,20 @@ app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'))
 
-app.use('/departments', require('./departments/departments.controller'))
+app.use('/subjects', require('./subjects/subject.controller'))
 
-app.use('/employees', require('./employees/employees.controller'))
+app.use('/teacher-subject-assignment', require('./teacher_subject_assignment/teacher_subject.controller')) 
 
-app.use('/requests', require('./requests/request.controller'))
+app.use('/students', require('./students/student.controller'))
+
+app.use('/enrollments', require('./enrollments/enrollment.controller'))
+
+app.use('/quizzes', require('./quizzes/quiz.controller'))
 
 app.use('/api-docs', require('./_helpers/swagger'))
 
 // global error handler
-app.use(errorHandler)
+app.use(errorHandler) 
 
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000
 app.listen(port, _ => { console.log(`LISTENING ON PORT ${port}`)})  

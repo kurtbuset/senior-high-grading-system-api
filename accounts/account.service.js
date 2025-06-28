@@ -11,7 +11,7 @@ module.exports = {
   authenticate,
   refreshToken,
   revokeToken,
-  register,
+  // register,
   verifyEmail,
   forgotPassword,
   validateResetToken,
@@ -24,6 +24,7 @@ module.exports = {
 }
 
 async function authenticate({ email, password, ipAddress }){
+  // await db.initialize()
   const account = await db.Account.scope('withHash').findOne({ where: { email}})
 
   if(!account || !account.isVerified || !(await bcrypt.compare(password, account.passwordHash))){
@@ -38,7 +39,7 @@ async function authenticate({ email, password, ipAddress }){
   const jwtToken = generateJwtToken(account)
   const refreshToken = generateRefreshToken(account, ipAddress)
   await refreshToken.save()
-
+  
   return {
     ...basicDetails(account),
     jwtToken,
@@ -50,10 +51,10 @@ async function authenticate({ email, password, ipAddress }){
 async function refreshToken({ token, ipAddress }) {
   const refreshToken = await getRefreshToken(token)
   const account = await refreshToken.getAccount()
-
+  // console.log(JSON.stringify(refreshToken, null, 2))
   const newRefreshToken = generateRefreshToken(account, ipAddress)
   refreshToken.revoked = Date.now()
-  // console.log('revoked col: ', refreshToken.revoked)
+
   refreshToken.revokedByIp = ipAddress
   refreshToken.replacedByToken = newRefreshToken.token
   await refreshToken.save()
@@ -63,41 +64,40 @@ async function refreshToken({ token, ipAddress }) {
 
   return {
     ...basicDetails(account),
-    jwtToken,
-    refreshToken: refreshToken.token
+    jwtToken, 
+    refreshToken: newRefreshToken.token
   }
 }
 
 async function revokeToken({ token, ipAddress }) {
   const refreshToken = await getRefreshToken(token)
-
   refreshToken.revoked = Date.now()
   refreshToken.revokedByIp = ipAddress
   await refreshToken.save()
 }
 
 
-async function register(params, origin) {
-  // validate
-  if(await db.Account.findOne({ where: { email: params.email}})) {
-    return await sendAlreadyRegisteredEmail(params.email, origin)
-  }
+// async function register(params, origin) {
+//   // validate
+//   if(await db.Account.findOne({ where: { email: params.email}})) {
+//     return await sendAlreadyRegisteredEmail(params.email, origin)
+//   }
 
-  // create account object
-  const account = new db.Account(params)
+//   // create account object
+//   const account = new db.Account(params)
   
-  // first registered account is an admin
-  const isFirstAccount = (await db.Account.count()) === 0
-  account.role = isFirstAccount ? Role.Admin : Role.User
-  account.verificationToken = randomTokenString()
-  account.isActive = true
-  // hash password
-  account.passwordHash = await hash(params.password)
+//   // first registered account is an admin
+//   const isFirstAccount = (await db.Account.count()) === 0
+//   account.role = isFirstAccount ? Role.Admin : Role.User
+//   account.verificationToken = randomTokenString()
+//   account.isActive = true
+//   // hash password
+//   account.passwordHash = await hash(params.password)
 
-  await account.save()
+//   await account.save()
 
-  await sendVerificationEmail(account, origin)
-}
+//   await sendVerificationEmail(account, origin)
+// }
 
 async function verifyEmail({ token }) {
   const account = await db.Account.findOne({ where: { verificationToken: token }})
@@ -154,7 +154,7 @@ async function getAll() {
 async function getById(id) {
   const account = await getAccount(id)
   return basicDetails(account)
-}
+} 
 
 async function create(params) {
   if(await db.Account.findOne({ where: { email: params.email }})){
@@ -231,7 +231,7 @@ function randomTokenString(){
 
 function basicDetails(account){
   const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee } = account
-  console.log(JSON.stringify(account, null, 2))
+  // console.log(JSON.stringify(account, null, 2))
   
   return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee }
 }
