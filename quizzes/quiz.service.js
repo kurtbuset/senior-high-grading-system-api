@@ -1,10 +1,10 @@
 const db = require("../_helpers/db");
 
 module.exports = {
-  addRawScore,
+  addHighestPossibleScore,
 };
 
-async function addRawScore(params) {
+async function addHighestPossibleScore(params) {
   const teacher = await db.Teacher_Subject_Assignment.findOne({
     where: { id: params.teacher_subject_id },
   });
@@ -23,7 +23,7 @@ async function addRawScore(params) {
   });
 
   // Set max allowed quizzes based on type
-  const maxQuizzes = params.type === "Quarterly Assesment" ? 1 : 3;
+  const maxQuizzes = params.type === "Quarterly Assesment" ? 1 : 10;
 
   if (existingCount >= maxQuizzes) {
     throw `You have already reached the limit for ${params.type} in ${params.quarter}.`;

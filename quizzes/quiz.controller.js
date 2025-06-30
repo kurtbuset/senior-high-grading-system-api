@@ -6,12 +6,12 @@ const Role = require('../_helpers/role')
 const validateRequest = require("../_middleware/validate-request");
 const quizService = require('./quiz.service')
 
-router.post('/', authorize(Role.Teacher), addRawScoreSchema, addRawScore)
-router.put('/:id', authorize(Role.Teacher), updateRawScoreSchema, updateRawScore)
+router.post('/', authorize(Role.Teacher), addHighestPossibleScoreSchema, addHighestPossibleScore)
+router.put('/:id', authorize(Role.Teacher), updateHighestPossibleScoreSchema, updateHighestPossibleScore)
 
 module.exports = router
 
-function addRawScoreSchema(req, res, next){
+function addHighestPossibleScoreSchema(req, res, next){
   const schema = Joi.object({
     teacher_subject_id: Joi.number().required(),
     type: Joi.string().valid('Written Work', 'Performance Tasks', 'Quarterly Assesment').required(),
@@ -22,9 +22,9 @@ function addRawScoreSchema(req, res, next){
   validateRequest(req, next, schema)
 }
 
-function addRawScore(req, res, next){
+function addHighestPossibleScore(req, res, next){
   quizService
-    .addRawScore(req.body)
+    .addHighestPossibleScore(req.body)
     .then((quiz => {
       // console.log(JSON.stringify(quiz, null, 2))
       res.json(quiz)
@@ -33,10 +33,10 @@ function addRawScore(req, res, next){
 }
 
 
-function updateRawScoreSchema(){
+function updateHighestPossibleScoreSchema(){
 
 }
 
-function updateRawScore(){
+function updateHighestPossibleScore(){
 
 }

@@ -24,7 +24,13 @@ function model(sequelize){
   }
 
   const options = {
-    timestamps: false
+    timestamps: false,
+    indexes: [
+    {
+      unique: true,
+      fields: ['quiz_id', 'enrollment_id']
+    }
+  ]
   }
 
   return sequelize.define('quiz_score', attributes, options)

@@ -28,6 +28,8 @@ app.use('/enrollments', require('./enrollments/enrollment.controller'))
 
 app.use('/quizzes', require('./quizzes/quiz.controller'))
 
+app.use('/quiz-scores', require('./quiz_scores/quiz_score.controller'))
+
 app.use('/api-docs', require('./_helpers/swagger'))
 
 // global error handler
