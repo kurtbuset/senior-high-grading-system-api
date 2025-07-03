@@ -28,7 +28,7 @@ async function getStudentsByTeacherSubjectId(teacher_subject_id) {
     student_id: x.student.id,
     firstName: x.student.firstname, 
     lastName: x.student.lastname,
-    is_enrolled: x.is_enrolled
+    is_enrolled: x.is_enrolled,
   }))
 }
 

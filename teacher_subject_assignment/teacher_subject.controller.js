@@ -6,16 +6,25 @@ const Joi = require("joi");
 const teacherSubjectService = require('../teacher_subject_assignment/teacher_subject.service')
 const validateRequest = require("../_middleware/validate-request");
 
-
-router.get('/:id', authorize(), getByTeacherId);
+router.get('/:id', authorize(), getOneSubject);
+router.get('/list/:id', authorize(), getSubjectsByTeacherId);
 router.post('/', authorize(Role.Admin), createSchema, create)
 
 module.exports = router;
 
-
-function getByTeacherId(req, res, next){
+function getOneSubject(req, res, next){
+  console.log('ID: ', req.params.id)
   teacherSubjectService
-    .getByTeacherId(req.params.id)
+    .getOneSubject(req.params.id)
+    .then(subject => {
+      res.json(subject)
+    })  
+    .catch(next)
+}
+
+function getSubjectsByTeacherId(req, res, next){
+  teacherSubjectService
+    .getSubjectsByTeacherId(req.params.id)
     .then(assignments => {
       // console.log(JSON.stringify(assignments, null, 2))
       res.json(assignments)

@@ -15,7 +15,7 @@ function getStudentsByTeacherSubjectId(req, res, next){
   enrollmentService
     .getStudentsByTeacherSubjectId(req.params.id)
     .then((student) => {
-      console.log(JSON.stringify(student, null, 2))
+      // console.log(JSON.stringify(student, null, 2))
       res.json(student)
     })
     .catch(next)
