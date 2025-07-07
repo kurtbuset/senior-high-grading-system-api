@@ -235,7 +235,7 @@ function update(req, res, next) {
 
   accountService
     .update(req.params.id, req.body)
-    .then((acccount) => res.json(acccount))
+    .then((account) => res.json(account))
     .catch(next);
 }
 

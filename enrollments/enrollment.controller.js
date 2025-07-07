@@ -6,10 +6,32 @@ const Role = require('../_helpers/role')
 const validateRequest = require("../_middleware/validate-request");
 const enrollmentService = require('./enrollment.service')
 
+router.get('/enrolled/:id', authorize(), getEnrolledStudents)
 router.get('/:id', authorize(), getStudentsByTeacherSubjectId)
 router.post('/', authorize(Role.Admin), createSchema, create)
 
+// kuwangan pa ug schema for postman testing
+router.put('/:id', authorize(), updateStudentEnrollment)
+
 module.exports = router
+
+function getEnrolledStudents(req, res, next){
+  enrollmentService
+    .getEnrolledStudents(req.params.id)
+    .then(students => {
+      res.json(students)
+    })
+    .catch(next)
+}
+
+function updateStudentEnrollment(req, res, next){
+  enrollmentService
+    .updateStudentEnrollment(req.params.id, req.body)
+    .then(message => {
+      res.json(message)
+    })
+    .catch(next)
+}
 
 function getStudentsByTeacherSubjectId(req, res, next){
   enrollmentService
