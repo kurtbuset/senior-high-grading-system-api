@@ -13,7 +13,7 @@ router.post('/', authorize(Role.Admin), createSchema, create)
 module.exports = router;
 
 function getOneSubject(req, res, next){
-  console.log('ID: ', req.params.id)
+  // console.log('ID: ', req.params.id)
   teacherSubjectService
     .getOneSubject(req.params.id)
     .then(subject => {

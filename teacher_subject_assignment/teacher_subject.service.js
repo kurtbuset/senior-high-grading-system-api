@@ -15,9 +15,9 @@ function formatSubjectAssignment(x) {
     section: x.section,
     school_year: x.school_year,
     semester: x.semester,
-    default_ww_percent: x.subject.default_ww_percent,
-    default_pt_percent: x.subject.default_pt_percent,
-    default_qa_percent: x.subject.default_qa_percent
+    custom_ww_percent: x.custom_ww_percent,
+    custom_pt_percent: x.custom_pt_percent,
+    custom_qa_percent: x.custom_qa_percent
   };
 }
 
@@ -46,12 +46,12 @@ async function getSubjectsByTeacherId(teacher_id) {
 async function create(params) {
   const teacher = await db.Account.findByPk(params.teacher_id);
   if (!teacher || teacher.role !== 'Teacher') {
-    throw new Error(`Account with ID ${params.teacher_id} is not a teacher.`);
+    throw`Account with ID ${params.teacher_id} is not a teacher.`;
   }
 
   const subject = await db.Subject.findByPk(params.subject_id);
   if (!subject) {
-    throw new Error(`Subject with ID ${params.subject_id} does not exist.`);
+    throw `Subject with ID ${params.subject_id} does not exist.`
   }
 
   const duplicate = await db.Teacher_Subject_Assignment.findOne({
@@ -64,10 +64,17 @@ async function create(params) {
   });
 
   if (duplicate) {
-    throw new Error(`Section "${params.section}" already exists for Grade ${params.grade_level}, ${params.semester}, SY ${params.school_year}.`);
+    throw`Section "${params.section}" already exists for Grade ${params.grade_level}, ${params.semester}, SY ${params.school_year}.`;
   }
 
-  const teacherSubject = await db.Teacher_Subject_Assignment.create(params);
+   const data = {
+    ...params,
+    custom_ww_percent: params.custom_ww_percent ?? subject.default_ww_percent,
+    custom_pt_percent: params.custom_pt_percent ?? subject.default_pt_percent,
+    custom_qa_percent: params.custom_qa_percent ?? subject.default_qa_percent,
+  };
+
+  const teacherSubject = await db.Teacher_Subject_Assignment.create(data);
   return basicDetails(teacherSubject);
 }
 
