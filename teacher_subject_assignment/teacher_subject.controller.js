@@ -9,8 +9,28 @@ const validateRequest = require("../_middleware/validate-request");
 router.get('/:id', authorize(), getOneSubject);
 router.get('/list/:id', authorize(), getSubjectsByTeacherId);
 router.post('/', authorize(Role.Admin), createSchema, create)
+router.put('/:id', authorize(), updatePercentagesSchema, updatePercentages)
 
 module.exports = router;
+
+function updatePercentagesSchema(req, res, next){
+  const schema = Joi.object({
+    custom_ww_percent: Joi.number().required().min(0).max(100),
+    custom_pt_percent: Joi.number().required().min(0).max(100),
+    custom_qa_percent: Joi.number().required().min(0).max(100),
+  })
+
+  validateRequest(req, next, schema)
+}
+
+function updatePercentages(req, res, next){
+  teacherSubjectService
+    .updatePercentages(req.params.id, req.body)
+    .then(_ => {
+      res.json( { msg: 'successfully updated boii' })
+    })
+    .catch(next)
+}
 
 function getOneSubject(req, res, next){
   // console.log('ID: ', req.params.id)

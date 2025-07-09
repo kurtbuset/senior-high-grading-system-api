@@ -3,8 +3,36 @@ const db = require("../_helpers/db");
 module.exports = {
   create,
   getSubjectsByTeacherId,
-  getOneSubject
+  getOneSubject,
+  updatePercentages
 };
+
+async function updatePercentages(teacher_subject_id, value) {
+  const { custom_ww_percent, custom_pt_percent, custom_qa_percent } = value;
+  const total = custom_ww_percent + custom_pt_percent + custom_qa_percent;
+
+  if (total > 100) {
+    throw "Total percentage cannot exceed 100%"
+  }
+
+  if (total < 100) {
+    throw "Total percentage must be exactly 100%"
+  }
+
+  // Perform DB update logic here...
+  await db.Teacher_Subject_Assignment.update(
+    {
+      custom_ww_percent,
+      custom_pt_percent,
+      custom_qa_percent,
+    },
+    {
+      where: { id: teacher_subject_id }
+    }
+  );
+
+}
+
 
 // Reusable projection function
 function formatSubjectAssignment(x) {
