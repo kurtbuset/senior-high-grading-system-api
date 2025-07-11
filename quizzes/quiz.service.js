@@ -2,7 +2,24 @@ const db = require("../_helpers/db");
 
 module.exports = {
   addHighestPossibleScore,
+  getHighestPossibleScore
 };
+
+async function getHighestPossibleScore(teacher_subject_id, param){
+  // console.log(param)
+
+  const quizzes = await db.Quiz.findAll({
+    where: {
+      teacher_subject_id,
+      quarter: param.quarter,
+      type: param.type
+    },
+    attributes: ["id", "description", "hps"]
+  })
+  
+  console.log(JSON.stringify(quizzes, null, 2))
+  return quizzes
+}
 
 async function addHighestPossibleScore(params) {
   const teacher = await db.Teacher_Subject_Assignment.findOne({

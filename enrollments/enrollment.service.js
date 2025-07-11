@@ -5,10 +5,14 @@ module.exports = {
   getStudentsByTeacherSubjectId,
   updateStudentEnrollment,
   getEnrolledStudents,
-  getFirstQuarterGradeSheet,
+  getQuarterlyGradeSheet,
 };
 
-async function getFirstQuarterGradeSheet(teacher_subject_id) {
+// partial pa ni goi
+// get quarterly grade sheet based on params sa frontend whether First or Second Quarter
+// fetch also percentage of subject based on teacher_subject_id
+async function getQuarterlyGradeSheet(teacher_subject_id) {
+  // 1st quarter; WW
   const writtenWorkHPS = await db.Quiz.sum("hps", {
     where: {
       teacher_subject_id,
@@ -26,7 +30,7 @@ async function getFirstQuarterGradeSheet(teacher_subject_id) {
     attributes: ["id"],
   });
   // quiz id of WW
-  const quizIds = quizzes.map((q) => q.id);
+  const wwQuizIds = quizzes.map((q) => q.id);
 
   // students
   const students = await db.Enrollment.findAll({
@@ -48,7 +52,7 @@ async function getFirstQuarterGradeSheet(teacher_subject_id) {
     const totalScore = await db.Quiz_Score.sum("raw_score", {
       where: {
         enrollment_id: enrollment.id,
-        quiz_id: quizIds, // only those WW quiz IDs
+        quiz_id: wwQuizIds, // only those WW quiz IDs
       },
     });
 

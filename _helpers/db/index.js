@@ -44,6 +44,6 @@ async function initialize() {
 
 initialize();
 
-db.initialize = initialize;
+// db.initialize = initialize;
 
 // module.exports = db;
