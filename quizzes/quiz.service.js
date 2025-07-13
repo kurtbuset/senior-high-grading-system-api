@@ -1,12 +1,40 @@
 const db = require("../_helpers/db");
 
 module.exports = {
-  addHighestPossibleScore,
-  getHighestPossibleScore
+  addQuiz,
+  getQuizzes,
+  updateQuiz
 };
 
-async function getHighestPossibleScore(teacher_subject_id, param){
-  // console.log(param)
+async function addQuiz(params) {
+  if (params.type === 'Quarterly Assesment') {
+    const existing = await db.Quiz.findOne({
+      where: {
+        teacher_subject_id: params.teacher_subject_id,
+        quarter: params.quarter,
+        type: 'Quarterly Assesment'
+      }
+    });
+
+    if (existing) {
+      throw 'Only one Quarterly Assessment is allowed per subject and quarter.';
+    }
+  }
+  
+  const quiz = new db.Quiz(params)
+  await quiz.save()
+}
+
+async function updateQuiz(id, params) {
+
+  const quiz = await db.Quiz.findByPk(id)
+  Object.assign(quiz, params)
+
+  await quiz.save()
+
+}
+
+async function getQuizzes(teacher_subject_id, param){
 
   const quizzes = await db.Quiz.findAll({
     where: {
@@ -17,39 +45,11 @@ async function getHighestPossibleScore(teacher_subject_id, param){
     attributes: ["id", "description", "hps"]
   })
   
-  console.log(JSON.stringify(quizzes, null, 2))
+  // console.log(JSON.stringify(quizzes, null, 2))
   return quizzes
 }
 
-async function addHighestPossibleScore(params) {
-  const teacher = await db.Teacher_Subject_Assignment.findOne({
-    where: { id: params.teacher_subject_id },
-  });
 
-  if (!teacher) {
-    throw "no teacher + subject was found in db men :(";
-  }
-
-  // Count existing quizzes for this subject, type, and quarter
-  const existingCount = await db.Quiz.count({
-    where: {
-      teacher_subject_id: params.teacher_subject_id,
-      type: params.type,
-      quarter: params.quarter,
-    },
-  });
-
-  // Set max allowed quizzes based on type
-  const maxQuizzes = params.type === "Quarterly Assesment" ? 1 : 10;
-
-  if (existingCount >= maxQuizzes) {
-    throw `You have already reached the limit for ${params.type} in ${params.quarter}.`;
-  }
-
-  const quiz = new db.Quiz(params);
-  await quiz.save();
-  return basicDetails(quiz);
-}
 
 function basicDetails(quiz) {
   const { id, teacher_subject_id, type, quarter, description, hps } = quiz;

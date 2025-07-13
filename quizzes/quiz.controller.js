@@ -6,17 +6,34 @@ const Role = require('../_helpers/role')
 const validateRequest = require("../_middleware/validate-request");
 const quizService = require('./quiz.service')
 
-router.get('/:id', authorize(), getHighestPossibleScores)
-router.post('/', authorize(Role.Teacher), addHighestPossibleScoreSchema, addHighestPossibleScore)
-router.put('/:id', authorize(Role.Teacher), updateHighestPossibleScoreSchema, updateHighestPossibleScore)
+router.get('/:id', authorize(), getQuizzes)
+router.post('/', authorize(Role.Teacher), addQuizSchema, addQuiz)
+router.put('/:id', authorize(Role.Teacher), updateQuizSchema, updateQuiz)
 
 module.exports = router
 
+function updateQuizSchema(req, res, next){
+  const schema = Joi.object({
+    hps: Joi.number().min(1).required(),
+    description: Joi.string()
+  })
+  validateRequest(req, next, schema)
+}
 
-function getHighestPossibleScores(req, res, next){
+function updateQuiz(req, res, next){
+  quizService
+    .updateQuiz(req.params.id, req.body)
+    .then(_ => {
+      res.json({ msg: 'lezgo'})
+    })
+    .catch(next)    
+} 
+
+
+function getQuizzes(req, res, next){
   const { quarter, type } = req.query
     quizService
-      .getHighestPossibleScore(req.params.id, { quarter, type })
+      .getQuizzes(req.params.id, { quarter, type })
       .then(quizzes => {
         // console.log(JSON.stringify(quizzes, null, 2))
         res.json(quizzes)
@@ -25,33 +42,25 @@ function getHighestPossibleScores(req, res, next){
 }
 
 
-
-function addHighestPossibleScoreSchema(req, res, next){
+function addQuizSchema(req, res, next){
   const schema = Joi.object({
     teacher_subject_id: Joi.number().required(),
     type: Joi.string().valid('Written Work', 'Performance Tasks', 'Quarterly Assesment').required(),
     quarter: Joi.string().valid('First Quarter', 'Second Quarter').required(),
-    description: Joi.string(),
+    description: Joi.string().allow('').max(255).optional(),
     hps: Joi.number().min(1).required()
   })
   validateRequest(req, next, schema)
 }
 
-function addHighestPossibleScore(req, res, next){
+function addQuiz(req, res, next){
   quizService
-    .addHighestPossibleScore(req.body)
-    .then((quiz => {
-      res.json(quiz)
+    .addQuiz(req.body)
+    .then((_ => {
+      res.json({ msg: 'success boi' })
     }))
     .catch(next)
 }
 
 
 
-function updateHighestPossibleScoreSchema(){
-
-}
-
-function updateHighestPossibleScore(){
-
-}
