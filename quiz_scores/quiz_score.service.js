@@ -2,46 +2,105 @@ const db = require("../_helpers/db");
 
 module.exports = {
   addRawScore,
+  getStudentsWithoutScores,
+  getStudentsWithScores,
+  updateRawScore
 };
 
-async function addRawScore(params) {
-  // ✅ 1. Check if quiz exists
-  const quiz = await db.Quiz.findByPk(params.quiz_id);
-  // console.log(quiz)
-  if (!quiz) {
-    throw "Quiz not found";
-  }
-
-  // ✅ 2. Check if enrollment exists
-  const enrollment = await db.Enrollment.findByPk(params.enrollment_id);
-  if (!enrollment) {
-    throw "Enrollment not found";
-  }
-
-  if (!enrollment.is_enrolled) {
-    throw("This student is not enrolled in the selected subject.");
-  }
-
-  const existing = await db.Quiz_Score.findOne({
-    where: { quiz_id: params.quiz_id, enrollment_id: params.enrollment_id },
+async function getStudentsWithScores(quiz_id) {
+  const results = await db.Quiz_Score.findAll({
+    where: { quiz_id },
+    attributes: ['enrollment_id', 'raw_score'],
+    include: [
+      {
+        model: db.Enrollment,
+        include: [
+          {
+            model: db.Student,
+            attributes: ['firstname', 'lastname'],
+          },
+        ],
+      },
+    ],
   });
-  if (existing) {
-    throw new Error("Score for this student and quiz already exists");
-  }
 
-  if (params.raw_score > quiz.hps) {
-    throw new Error(
-      `Raw score (${params.raw_score}) cannot be higher than HPS (${quiz.hps})`
-    );
-  }
+  // Format the data
+  const students = results.map((score) => ({
+    enrollment_id: score.enrollment_id,
+    raw_score: score.raw_score,
+    firstName: score.enrollment.student.firstname,
+    lastName: score.enrollment.student.lastname,
+  }));
 
-  const quizScore = new db.Quiz_Score(params);
-  await quizScore.save();
-
-  return quizScore;
+  // console.log(JSON.stringify(students, null, 2))
+  return students;
 }
 
-function basicDetails(quiz) {
-  const { quiz_id, enrollment_id, raw_score } = quiz;
-  return { quiz_id, enrollment_id, raw_score };
+
+// get the enrolled students but no record in quiz-scores table
+// Assuming you have models defined: Enrollment, Student, QuizScore
+async function getStudentsWithoutScores({ teacher_subject_id, quiz_id }) {
+  console.log({ teacher_subject_id, quiz_id }); // For debugging
+
+  // Fetch all enrollments for the given teacher_subject_id where the student is enrolled,
+  // including student details and any matching quiz score record for the given quiz.
+  const enrollments = await db.Enrollment.findAll({
+    where: {
+      teacher_subject_id,
+      is_enrolled: true,
+    },
+    include: [
+      {
+        model: db.Student,
+        attributes: ['firstname', 'lastname'],
+      },
+      {
+        model: db.Quiz_Score,
+        required: false,  // left join so we still get enrollments even if no matching quiz score exists
+        where: { quiz_id },
+        attributes: ['raw_score'],
+      },
+    ],
+  });
+
+  // Filter out enrollments that have a quiz score (i.e. quizScore record present)
+  const studentsWithoutScores = enrollments
+    .filter((enrollment) => {
+      return enrollment.quiz_scores.length === 0;
+    })
+    .map((enrollment) => ({
+      enrollment_id: enrollment.id,
+      firstName: enrollment.student.firstname,
+      lastName: enrollment.student.lastname,
+    }));
+
+  return studentsWithoutScores;
 }
+
+
+async function addRawScore(params) {
+  console.log(params)
+
+  const result = await db.Quiz_Score.bulkCreate(params, {
+    ignoreDuplicates: true, // Will silently skip duplicates
+    validate: true           // Validate each object
+  });
+  
+  return result
+}
+
+async function updateRawScore(params) {
+  console.log(params)
+  
+  const result = await db.Quiz_Score.bulkCreate(params, {
+    updateOnDuplicate: ['raw_score'],
+    validate: true
+  });
+
+  return result
+  
+}
+// function basicDetails(quiz) {
+//   const { quiz_id, enrollment_id, raw_score } = quiz;
+//   return { quiz_id, enrollment_id, raw_score };
+// }

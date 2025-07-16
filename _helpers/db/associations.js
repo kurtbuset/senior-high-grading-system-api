@@ -59,8 +59,8 @@ module.exports = function defineAssociations(db){
   });
 
   
-  db.Quiz.hasMany(db.Quiz_Score, { foreignKey: "quiz_id" });
-  db.Quiz_Score.belongsTo(db.Quiz, { foreignKey: "quiz_id" });
-  db.Enrollment.hasMany(db.Quiz_Score, { foreignKey: "enrollment_id" });
-  db.Quiz_Score.belongsTo(db.Enrollment, { foreignKey: "enrollment_id" });
+  db.Quiz.hasMany(db.Quiz_Score, { foreignKey: "quiz_id", onDelete: 'CASCADE', });
+  db.Quiz_Score.belongsTo(db.Quiz, { foreignKey: "quiz_id", onDelete: 'CASCADE', });
+  db.Enrollment.hasMany(db.Quiz_Score, { foreignKey: "enrollment_id", onDelete: 'CASCADE', });
+  db.Quiz_Score.belongsTo(db.Enrollment, { foreignKey: "enrollment_id", onDelete: 'CASCADE', });
 }

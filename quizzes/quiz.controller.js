@@ -15,7 +15,7 @@ module.exports = router
 function updateQuizSchema(req, res, next){
   const schema = Joi.object({
     hps: Joi.number().min(1).required(),
-    description: Joi.string()
+    description: Joi.string().allow('').max(255).optional()
   })
   validateRequest(req, next, schema)
 }
@@ -35,7 +35,6 @@ function getQuizzes(req, res, next){
     quizService
       .getQuizzes(req.params.id, { quarter, type })
       .then(quizzes => {
-        // console.log(JSON.stringify(quizzes, null, 2))
         res.json(quizzes)
       })
       .catch(next)
