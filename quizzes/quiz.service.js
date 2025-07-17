@@ -5,8 +5,14 @@ module.exports = {
   getQuizzes,
   updateQuiz,
   getQuarterlyGradeSheet,
-  getSemestralFinalGrade
+  getSemestralFinalGrade,
+  deleteQuiz
 };
+
+async function deleteQuiz(id){
+  const quiz = await db.Quiz.findByPk(id)
+  await quiz.destroy()
+}
 
 async function getSemestralFinalGrade(teacher_subject_id) {
   const quarters = ["First Quarter", "Second Quarter"];
