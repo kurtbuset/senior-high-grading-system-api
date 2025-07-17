@@ -6,11 +6,32 @@ const Role = require('../_helpers/role')
 const validateRequest = require("../_middleware/validate-request");
 const quizService = require('./quiz.service')
 
+router.get('/semestral-final-grade/:id', authorize(), getSemestralFinalGrade)
+router.get('/quarterly-grade-sheet/:id', authorize(), getQuarterlyGradeSheet)
 router.get('/:id', authorize(), getQuizzes)
 router.post('/', authorize(Role.Teacher), addQuizSchema, addQuiz)
 router.put('/:id', authorize(Role.Teacher), updateQuizSchema, updateQuiz)
 
 module.exports = router
+
+function getSemestralFinalGrade(req, res, next){
+  quizService
+    .getSemestralFinalGrade(req.params.id)
+    .then(students => {
+      res.json(students)
+    })
+    .catch(next)
+}
+
+function getQuarterlyGradeSheet(req, res, next){
+  const { quarter } = req.query
+  quizService
+    .getQuarterlyGradeSheet(req.params.id, { quarter })
+    .then(students => {
+      res.json(students)  
+    })
+    .catch(next)
+}
 
 function updateQuizSchema(req, res, next){
   const schema = Joi.object({

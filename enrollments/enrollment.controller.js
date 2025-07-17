@@ -6,7 +6,8 @@ const Role = require('../_helpers/role')
 const validateRequest = require("../_middleware/validate-request");
 const enrollmentService = require('./enrollment.service')
 
-router.get('/1st-quarter-grade-sheet/:id', authorize(), getQuarterlyGradeSheet)
+
+
 router.get('/enrolled/:id', authorize(), getEnrolledStudents)
 router.get('/:id', authorize(), getStudentsByTeacherSubjectId)
 router.post('/', authorize(Role.Admin), createSchema, create)
@@ -16,14 +17,6 @@ router.put('/:id', authorize(), updateStudentEnrollment)
 
 module.exports = router
 
-function getQuarterlyGradeSheet(req, res, next){
-  enrollmentService
-    .getQuarterlyGradeSheet(req.params.id)
-    .then(students => {
-      res.json(students)
-    })
-    .catch(next)
-}
 
 function getEnrolledStudents(req, res, next){
   enrollmentService
