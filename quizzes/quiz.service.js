@@ -9,75 +9,196 @@ module.exports = {
   deleteQuiz
 };
 
-async function deleteQuiz(id){
-  const quiz = await db.Quiz.findByPk(id)
-  await quiz.destroy()
+async function deleteQuiz(id) {
+  const quiz = await db.Quiz.findByPk(id);
+  if (quiz) await quiz.destroy();
 }
 
-async function getSemestralFinalGrade(teacher_subject_id) {
-  const quarters = ["First Quarter", "Second Quarter"];
+async function addQuiz(params) {
+  if (params.type === "Quarterly Assesment") {
+    const existing = await db.Quiz.findOne({
+      where: {
+        teacher_subject_id: params.teacher_subject_id,
+        quarter: params.quarter,
+        type: "Quarterly Assesment",
+      },
+    });
+
+    if (existing) {
+      throw "Only one Quarterly Assessment is allowed per subject and quarter.";
+    }
+  }
+
+  await db.Quiz.create(params);
+}
+
+async function updateQuiz(id, params) {
+  const quiz = await db.Quiz.findByPk(id);
+  if (!quiz) return;
+  Object.assign(quiz, params);
+  await quiz.save();
+}
+
+async function getQuizzes(teacher_subject_id, param) {
+  return db.Quiz.findAll({
+    where: {
+      teacher_subject_id,
+      quarter: param.quarter,
+      type: param.type,
+    },
+    attributes: ["id", "description", "hps"],
+  });
+}
+
+
+
+
+
+function transmuteGrade(actual) {
+  const grade = parseFloat(actual);
+  if (isNaN(grade)) return "";
+  const match = transmutationTable.find(range => grade >= range.min && grade <= range.max);
+  return match ? match.grade : "";
+}
+
+
+
+
+
+async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
+  const { custom_ww_percent, custom_pt_percent, custom_qa_percent } =
+    await db.Teacher_Subject_Assignment.findOne({
+      where: { id: teacher_subject_id },
+      attributes: ["custom_ww_percent", "custom_pt_percent", "custom_qa_percent"],
+    });
+
+  const weightMap = {
+    "Written Work": custom_ww_percent / 100,
+    "Performance Tasks": custom_pt_percent / 100,
+    "Quarterly Assesment": custom_qa_percent / 100,
+  };
+
+  const quizTypes = ["Written Work", "Performance Tasks", "Quarterly Assesment"];
+
+  // Fetch HPS and Quiz IDs in parallel
+  const [hpsArray, quizIdsArray] = await Promise.all([
+    Promise.all(quizTypes.map(type =>
+      db.Quiz.sum("hps", { where: { teacher_subject_id, quarter, type } })
+    )),
+    Promise.all(quizTypes.map(type =>
+      db.Quiz.findAll({
+        where: { teacher_subject_id, quarter, type },
+        attributes: ["id"],
+      }).then(quizzes => quizzes.map(q => q.id))
+    )),
+  ]);
+
+  const hpsMap = Object.fromEntries(quizTypes.map((type, i) => [type, hpsArray[i] || 0]));
+  const quizIdsMap = Object.fromEntries(quizTypes.map((type, i) => [type, quizIdsArray[i]]));
 
   const students = await db.Enrollment.findAll({
     where: { teacher_subject_id, is_enrolled: true },
     include: [{ model: db.Student, attributes: ["firstname", "lastname"] }],
   });
 
-  const results = [];
+  const computeScores = async (enrollment_id, type) => {
+    const totalRaw = await db.Quiz_Score.sum("raw_score", {
+      where: {
+        enrollment_id,
+        quiz_id: quizIdsMap[type],
+      },
+    }) || 0;
 
-  for (const enrollment of students) {
-    const transmutedGrades = [];
+    const hps = hpsMap[type];
+    const percent = hps ? (totalRaw / hps) * 100 : 0;
+    const weighted = hps ? percent * weightMap[type] : 0;
 
-    for (const quarter of quarters) {
-      const quarterly = await getQuarterlyGradeSheet(teacher_subject_id, { quarter });
+    return {
+      percentage: hps ? percent.toFixed(2) : "",
+      weighted: hps ? weighted.toFixed(2) : "",
+      totalRaw,
+    };
+  };
 
-      const studentRecord = quarterly.find(
-        (record) => record.enrollment_id === enrollment.id
-      );
+  // Compute results in parallel
+  const result = await Promise.all(students.map(async enrollment => {
+    const ww = await computeScores(enrollment.id, "Written Work");
+    const pt = await computeScores(enrollment.id, "Performance Tasks");
+    const qa = await computeScores(enrollment.id, "Quarterly Assesment");
 
-      const transmuted = studentRecord?.transmutedGrade
-        ? parseFloat(studentRecord.transmutedGrade)
-        : null;
+    const initialGrade = [ww.weighted, pt.weighted, qa.weighted]
+      .map(Number)
+      .reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0)
+      .toFixed(2);
 
-      transmutedGrades.push(transmuted);
-    }
+    const transmutedGrade = transmuteGrade(initialGrade);
 
-    const [firstQuarter, secondQuarter] = transmutedGrades;
-    const average =
-      firstQuarter != null && secondQuarter != null
-        ? parseFloat(((firstQuarter + secondQuarter) / 2).toFixed(2))
-        : null;
-
-    let remarks = "";
-    let description = "";
-
-    if (average !== null) {
-      remarks = average >= 75 ? "PASSED" : "FAILED";
-
-      if (average >= 90) {
-        description = "Outstanding";
-      } else if (average >= 85) {
-        description = "Very Satisfactory";
-      } else if (average >= 80) {
-        description = "Satisfactory";
-      } else if (average >= 75) {
-        description = "Fairly Satisfactory";
-      } else {
-        description = "Did Not Meet Expectations";
-      }
-    }
-
-    results.push({
+    return {
+      enrollment_id: enrollment.id,
       firstName: enrollment.student.firstname,
       lastName: enrollment.student.lastname,
-      firstQuarter,
-      secondQuarter,
+      wwPercentageScore: ww.percentage,
+      wwWeightedScore: ww.weighted,
+      ptPercentageScore: pt.percentage,
+      ptWeightedScore: pt.weighted,
+      qaPercentageScore: qa.percentage,
+      qaWeightedScore: qa.weighted,
+      initialGrade,
+      transmutedGrade,
+    };
+  }));
+
+  return result;
+}
+
+
+
+
+
+async function getSemestralFinalGrade(teacher_subject_id) {
+  const [students, firstQuarterGrades, secondQuarterGrades] = await Promise.all([
+    db.Enrollment.findAll({
+      where: { teacher_subject_id, is_enrolled: true },
+      include: [{ model: db.Student, attributes: ["firstname", "lastname"] }],
+    }),
+    getQuarterlyGradeSheet(teacher_subject_id, { quarter: "First Quarter" }),
+    getQuarterlyGradeSheet(teacher_subject_id, { quarter: "Second Quarter" }),
+  ]);
+
+  // Create quick lookup maps for both quarters
+  const firstQuarterMap = new Map(firstQuarterGrades.map(g => [g.enrollment_id, parseFloat(g.transmutedGrade)]));
+  
+  const secondQuarterMap = new Map(secondQuarterGrades.map(g => [g.enrollment_id, parseFloat(g.transmutedGrade)]));
+
+  return students.map(({ id, student }) => {
+    const first = firstQuarterMap.get(id);
+    const second = secondQuarterMap.get(id);
+
+    const bothHaveGrades = first != null && second != null;
+    const average = bothHaveGrades ? Math.round((first + second) / 2) : "";
+
+    let remarks = "", description = "";
+    if (bothHaveGrades) {
+      remarks = average >= 75 ? "PASSED" : "FAILED";
+      description =
+        average >= 90 ? "Outstanding" :
+        average >= 85 ? "Very Satisfactory" :
+        average >= 80 ? "Satisfactory" :
+        average >= 75 ? "Fairly Satisfactory" :
+        "Did Not Meet Expectations";
+    }
+
+    return {
+      enrollment_id: id,
+      firstName: student.firstname,
+      lastName: student.lastname,
+      firstQuarter: first ?? "",
+      secondQuarter: second ?? "",
       average,
       remarks,
       description,
-    });
-  }
-
-  return results;
+    };
+  });
 }
 
 
@@ -124,184 +245,3 @@ const transmutationTable = [
   { min: 4.00, max: 7.99, grade: 61 },
   { min: 0.00, max: 3.99, grade: 60 },
 ];
-
-// helper function
-function transmuteGrade(actual) {
-  const grade = parseFloat(actual);
-  if (isNaN(grade)) return "";
-  const match = transmutationTable.find((range) => grade >= range.min && grade <= range.max);
-  return match ? match.grade : "";
-}
-
-async function getQuarterlyGradeSheet(teacher_subject_id, param) {
-  const { quarter } = param;
-
-  // Fetch custom weights from the assignment
-  const weights = await db.Teacher_Subject_Assignment.findOne({
-    where: { id: teacher_subject_id },
-    attributes: ["custom_ww_percent", "custom_pt_percent", "custom_qa_percent"],
-  });
-
-  const weightMap = {
-    "Written Work": weights.custom_ww_percent / 100,
-    "Performance Tasks": weights.custom_pt_percent / 100,
-    "Quarterly Assesment": weights.custom_qa_percent / 100,
-  };
-
-  // Get total HPS per assessment type
-  const types = Object.keys(weightMap);
-  const [wwTotalHPS = 0, ptTotalHPS = 0, qaTotalHPS = 0] = await Promise.all(
-    types.map((type) =>
-      db.Quiz.sum("hps", {
-        where: { teacher_subject_id, quarter, type },
-      })
-    )
-  );
-
-  const hpsMap = {
-    "Written Work": wwTotalHPS,
-    "Performance Tasks": ptTotalHPS,
-    "Quarterly Assesment": qaTotalHPS,
-  };
-
-  // Helper: Get quiz IDs by type
-  const getQuizIds = async (type) => {
-    const quizzes = await db.Quiz.findAll({
-      where: { teacher_subject_id, quarter, type },
-      attributes: ["id"],
-    });
-    return quizzes.map((q) => q.id);
-  };
-
-  const [wwQuizIds, ptQuizIds, qaQuizIds] = await Promise.all([
-    getQuizIds("Written Work"),
-    getQuizIds("Performance Tasks"),
-    getQuizIds("Quarterly Assesment"),
-  ]);
-
-  const quizIdsMap = {
-    "Written Work": wwQuizIds,
-    "Performance Tasks": ptQuizIds,
-    "Quarterly Assesment": qaQuizIds,
-  };
-
-  // Get all enrolled students
-  const students = await db.Enrollment.findAll({
-    where: { teacher_subject_id, is_enrolled: true },
-    include: [{ model: db.Student, attributes: ["firstname", "lastname"] }],
-  });
-
-  // Helper: compute raw, % score, and weighted
-  const computeScores = async (enrollment_id, type) => {
-    const totalRaw = await db.Quiz_Score.sum("raw_score", {
-      where: {
-        enrollment_id,
-        quiz_id: quizIdsMap[type],
-      },
-    }) || 0;
-
-    const totalHPS = hpsMap[type];
-    const percentage = totalHPS ? ((totalRaw / totalHPS) * 100).toFixed(2) : "";
-    const weighted = totalHPS
-      ? (parseFloat(percentage) * weightMap[type]).toFixed(2)
-      : "";
-
-    return { totalRaw, totalHPS, percentage, weighted };
-  };
-
-  const result = [];
-
-  for (const enrollment of students) {
-    const ww = await computeScores(enrollment.id, "Written Work");
-    const pt = await computeScores(enrollment.id, "Performance Tasks");
-    const qa = await computeScores(enrollment.id, "Quarterly Assesment");
-
-    const initialGrade = [
-      ww.weighted,
-      pt.weighted,
-      qa.weighted,
-    ]
-      .map(Number)
-      .reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0)
-      .toFixed(2);
-
-    const transmutedGrade = transmuteGrade(initialGrade);
-
-    result.push({
-      enrollment_id: enrollment.id,
-      firstName: enrollment.student.firstname,
-      lastName: enrollment.student.lastname,
-
-      // Written Work
-      wwTotalRawScore: ww.totalRaw,
-      wwTotalHPS: ww.totalHPS,
-      wwPercentageScore: ww.percentage,
-      wwWeightedScore: ww.weighted,
-
-      // Performance Tasks
-      ptTotalRawScore: pt.totalRaw,
-      ptTotalHPS: pt.totalHPS,
-      ptPercentageScore: pt.percentage,
-      ptWeightedScore: pt.weighted,
-
-      // Quarterly Assessment
-      qaTotalRawScore: qa.totalRaw,
-      qaTotalHPS: qa.totalHPS,
-      qaPercentageScore: qa.percentage,
-      qaWeightedScore: qa.weighted,
-
-      // Final grade (before transmutation)   
-      initialGrade,
-      transmutedGrade
-    });
-  }
-
-  console.log("result:", result);
-  return result;
-}
-
-
-async function addQuiz(params) {
-  if (params.type === "Quarterly Assesment") {
-    const existing = await db.Quiz.findOne({
-      where: {
-        teacher_subject_id: params.teacher_subject_id,
-        quarter: params.quarter,
-        type: "Quarterly Assesment",
-      },
-    });
-
-    if (existing) {
-      throw "Only one Quarterly Assessment is allowed per subject and quarter.";
-    }
-  }
-
-  const quiz = new db.Quiz(params);
-  await quiz.save();
-}
-
-async function updateQuiz(id, params) {
-  const quiz = await db.Quiz.findByPk(id);
-  Object.assign(quiz, params);
-
-  await quiz.save();
-}
-
-async function getQuizzes(teacher_subject_id, param) {
-  const quizzes = await db.Quiz.findAll({
-    where: {
-      teacher_subject_id,
-      quarter: param.quarter,
-      type: param.type,
-    },
-    attributes: ["id", "description", "hps"],
-  });
-
-  // console.log(JSON.stringify(quizzes, null, 2))
-  return quizzes;
-}
-
-function basicDetails(quiz) {
-  const { id, teacher_subject_id, type, quarter, description, hps } = quiz;
-  return { id, teacher_subject_id, type, quarter, description, hps };
-}
