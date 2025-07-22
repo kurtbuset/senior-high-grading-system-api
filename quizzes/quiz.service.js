@@ -154,7 +154,7 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
 
 
 
-
+// O (1) - fastest - using Map
 async function getSemestralFinalGrade(teacher_subject_id) {
   const [students, firstQuarterGrades, secondQuarterGrades] = await Promise.all([
     db.Enrollment.findAll({
@@ -201,6 +201,112 @@ async function getSemestralFinalGrade(teacher_subject_id) {
   });
 }
 
+
+
+// O (n squared) - slowest (using .find)
+// async function getSemestralFinalGrade(teacher_subject_id) {
+//   const quarters = ["First Quarter", "Second Quarter"];
+
+//   const students = await db.Enrollment.findAll({
+//     where: { teacher_subject_id, is_enrolled: true },
+//     include: [{ model: db.Student, attributes: ["firstname", "lastname"] }],
+//   });
+
+
+//   const results = [];
+//   for (const enrollment of students) {
+//     const transmutedGrades = [];
+
+//     for (const quarter of quarters) {
+//       const quarterly = await getQuarterlyGradeSheet(teacher_subject_id, { quarter });
+//       const record = quarterly.find(r => r.enrollment_id === enrollment.id);
+//       const grade = record?.transmutedGrade ? parseFloat(record.transmutedGrade) : null;
+//       transmutedGrades.push(grade);
+//     }
+
+//     const [firstQuarter, secondQuarter] = transmutedGrades;
+//     const average = (firstQuarter != null && secondQuarter != null)
+//       ? parseFloat(((firstQuarter + secondQuarter) / 2).toFixed(2))
+//       : null;
+
+//     let remarks = "", description = "";
+
+//     if (average !== null) {
+//       remarks = average >= 75 ? "PASSED" : "FAILED";
+//       description = average >= 90 ? "Outstanding"
+//         : average >= 85 ? "Very Satisfactory"
+//         : average >= 80 ? "Satisfactory"
+//         : average >= 75 ? "Fairly Satisfactory"
+//         : "Did Not Meet Expectations";
+//     }
+
+//     results.push({
+//       firstName: enrollment.student.firstname,
+//       lastName: enrollment.student.lastname,
+//       firstQuarter,
+//       secondQuarter,
+//       average,
+//       remarks,
+//       description,
+//     });
+//   }
+
+//   return results;
+// }
+
+
+
+
+// second fastest
+// async function getSemestralFinalGrade(teacher_subject_id) {
+//   const quarters = ["First Quarter", "Second Quarter"];
+
+//   // Cache all quarterly grades once
+//   const quarterlyGrades = {};
+//   for (const q of quarters) {
+//     quarterlyGrades[q] = await getQuarterlyGradeSheet(teacher_subject_id, { quarter: q });
+//   }
+
+//   const students = await db.Enrollment.findAll({
+//     where: { teacher_subject_id, is_enrolled: true },
+//     include: [{ model: db.Student, attributes: ["firstname", "lastname"] }],
+//     raw: true,
+//     nest: true,
+//   });
+
+//   return students.map(student => {
+//     const grades = quarters.map(q => {
+//       const found = quarterlyGrades[q].find(r => r.enrollment_id === student.id);
+//       return found?.transmutedGrade ? parseFloat(found.transmutedGrade) : null;
+//     });
+
+//     const [firstQuarter, secondQuarter] = grades;
+//     const average = grades.every(g => g != null)
+//       ? ((firstQuarter + secondQuarter) / 2).toFixed(2)
+//       : null;
+
+//     let remarks = "", description = "";
+//     if (average !== null) {
+//       const avg = parseFloat(average);
+//       remarks = avg >= 75 ? "PASSED" : "FAILED";
+//       description = avg >= 90 ? "Outstanding"
+//         : avg >= 85 ? "Very Satisfactory"
+//         : avg >= 80 ? "Satisfactory"
+//         : avg >= 75 ? "Fairly Satisfactory"
+//         : "Did Not Meet Expectations";
+//     }
+
+//     return {
+//       firstName: student.student.firstname,
+//       lastName: student.student.lastname,
+//       firstQuarter,
+//       secondQuarter,
+//       average,
+//       remarks,
+//       description,
+//     };
+//   });
+// }
 
 const transmutationTable = [
   { min: 100.00, max: 100.00, grade: 100 },
