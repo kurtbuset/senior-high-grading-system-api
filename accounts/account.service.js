@@ -11,7 +11,7 @@ module.exports = {
   authenticate,
   refreshToken,
   revokeToken,
-  // register,
+  register,
   verifyEmail,
   forgotPassword,
   validateResetToken,
@@ -23,28 +23,54 @@ module.exports = {
   delete: _delete,
 }
 
-async function authenticate({ email, password, ipAddress }){
-  // await db.initialize()
-  const account = await db.Account.scope('withHash').findOne({ where: { email}})
+async function authenticate({ username, password, ipAddress }) {
+  let account;
 
-  if(!account || !account.isVerified || !(await bcrypt.compare(password, account.passwordHash))){
-    throw 'Email or password is incorrect'
-  } 
+  // Try to find by email (for superadmin, admin, teacher)
+  account = await db.Account.scope('withHash').findOne({ where: { email: username } });
 
-  if(!account.isActive){
-    throw 'Account is inactive. Please contact administrator bitch'
+  // If found and role is not a student
+  if (account && account.role !== 'student') {
+    if (!(await bcrypt.compare(password, account.passwordHash)))
+      throw 'Username or password is incorrect';
+
+    // Proceed
+    return finalizeAuth(account, ipAddress);
   }
-  
-  // console.log(account.dataValues)
-  const jwtToken = generateJwtToken(account)
-  const refreshToken = generateRefreshToken(account, ipAddress)
-  await refreshToken.save()
-  
+
+  // If not found by email, try student login using school_id
+  const student = await db.Student.findOne({ where: { school_id: username } });
+
+  if (student) {
+    account = await db.Account.scope('withHash').findByPk(student.account_id); // assuming FK
+
+    if (!account || account.role !== 'Student')
+      throw 'Only students can log in using school ID';
+
+    if (!(await bcrypt.compare(password, account.passwordHash)))
+      throw 'Username or password is incorrect';
+
+    return finalizeAuth(account, ipAddress);
+  }
+
+  // If nothing matched
+  throw 'Username or password is incorrect';
+} 
+
+
+async function finalizeAuth(account, ipAddress) {
+  if (!account.isVerified) throw 'Account not verified';
+  if (!account.isActive) throw 'Account inactive';
+
+  const jwtToken = generateJwtToken(account);
+  const refreshToken = generateRefreshToken(account, ipAddress);
+  await refreshToken.save();
+
   return {
     ...basicDetails(account),
     jwtToken,
-    refreshToken: refreshToken.token
-  }
+    refreshToken: refreshToken.token,
+  };
 }
 
 
@@ -77,27 +103,28 @@ async function revokeToken({ token, ipAddress }) {
 }
 
 
-// async function register(params, origin) {
-//   // validate
-//   if(await db.Account.findOne({ where: { email: params.email}})) {
-//     return await sendAlreadyRegisteredEmail(params.email, origin)
-//   }
+async function register(params, origin) {
+  // validate
+  console.log(JSON.stringify(params, null, 2))
+  if(await db.Account.findOne({ where: { email: params.email}})) {
+    return await sendAlreadyRegisteredEmail(params.email, origin)
+  }
 
-//   // create account object
-//   const account = new db.Account(params)
+  // create account object
+  const account = new db.Account(params)
   
-//   // first registered account is an admin
-//   const isFirstAccount = (await db.Account.count()) === 0
-//   account.role = isFirstAccount ? Role.Admin : Role.User
-//   account.verificationToken = randomTokenString()
-//   account.isActive = true
-//   // hash password
-//   account.passwordHash = await hash(params.password)
+  // first registered account is an admin
+  const isFirstAccount = (await db.Account.count()) === 0
+  account.role = isFirstAccount ? Role.SuperAdmin : params.role
+  account.verificationToken = randomTokenString()
+  account.isActive = true
+  // hash password
+  account.passwordHash = await hash(params.password)
 
-//   await account.save()
+  await account.save()
 
-//   await sendVerificationEmail(account, origin)
-// }
+  await sendVerificationEmail(account, origin)
+}
 
 async function verifyEmail({ token }) {
   const account = await db.Account.findOne({ where: { verificationToken: token }})
@@ -161,15 +188,57 @@ async function create(params) {
     throw `Email '${params.email}' is already registered`
   }
 
-  const account = new db.Account(params)
-  account.verified = Date.now()
-  // account.isActive = true
-  account.passwordHash = await hash(params.password)
+  const account = new db.Account({
+    email: params.email,
+    passwordHash: await hash(params.password),
+    firstName: params.firstName,
+    lastName: params.lastName,
+    role: params.role,
+    isActive: params.isActive,
+    verified: Date.now()
+  });
 
   await account.save()
+
+   // If role is Student, generate school_id and insert student info
+  if (params.role === Role.Student) {
+    const school_id = await generateSchoolId();
+    await db.Student.create({
+      account_id: account.id,
+      school_id,
+      sex: params.sex,
+      address: params.address,
+      guardian_name: params.guardian_name,
+      guardian_contact: params.guardian_contact
+    });
+  }
   
   return basicDetails(account)
 }
+
+async function generateSchoolId() {
+  const year = new Date().getFullYear();
+
+  // Count how many students exist this year
+  const latest = await db.Student.findAll({
+    where: {
+      school_id: {
+        [db.Sequelize.Op.like]: `${year}-%`
+      }
+    },
+    order: [['school_id', 'DESC']],
+    limit: 1
+  });
+
+  let nextNumber = 1;
+  if (latest.length) {
+    const lastId = latest[0].school_id.split('-')[1]; // e.g. 00001
+    nextNumber = parseInt(lastId) + 1;
+  }
+
+  return `${year}-${String(nextNumber).padStart(5, '0')}`; // e.g. 2025-00001
+}
+
 
 async function update(id, params) {
   const account = await getAccount(id)

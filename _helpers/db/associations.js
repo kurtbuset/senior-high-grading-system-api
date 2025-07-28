@@ -12,6 +12,15 @@ module.exports = function defineAssociations(db){
     foreignKey: "teacher_id",
   });
 
+  // One-to-One: Account ↔ Student
+  db.Account.hasOne(db.Student, {
+    foreignKey: "account_id",
+    onDelete: "CASCADE"
+  });
+  db.Student.belongsTo(db.Account, {
+    foreignKey: "account_id"
+  });
+
   // Subject → TeacherSubjectAssignmen
   // one to many (one subject appears in many assignments but with diff sections)
   db.Subject.hasMany(db.Teacher_Subject_Assignment, {

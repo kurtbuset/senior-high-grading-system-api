@@ -4,10 +4,8 @@ module.exports = {
   create,
   getStudentsByTeacherSubjectId,
   updateStudentEnrollment,
-  getEnrolledStudents
+  getEnrolledStudents,
 };
-
-
 
 // return also first, second quarter computed grade
 async function getEnrolledStudents(teacher_subject_id) {
@@ -59,21 +57,36 @@ async function getStudentsByTeacherSubjectId(teacher_subject_id) {
     include: [
       {
         model: db.Student,
-        attributes: ["id", "firstname", "lastname"],
+        include: [
+          {
+            model: db.Account,
+            attributes: ["firstName", "lastName"],
+          },
+        ],
+        attributes: [
+          "school_id",
+          "sex",
+          "address",
+          "guardian_name",
+          "guardian_contact",
+        ],
       },
     ],
   });
 
-  // console.log(JSON.stringify(enrolledStudents, null, 1))
+  console.log(JSON.stringify(students, null, 2));
 
   return (
     students
-      // .filter(x => x.Student)
       .map((x) => ({
         enrollment_id: x.id,
-        student_id: x.student.id,
-        firstName: x.student.firstname,
-        lastName: x.student.lastname,
+        firstName: x.student.account.firstName,
+        lastName: x.student.account.lastName,
+        school_id: x.student.school_id,
+        sex: x.student.sex,
+        address: x.student.address,
+        guardian_name: x.student.guardian_name,
+        guardian_contact: x.student.guardian_contact,
         is_enrolled: x.is_enrolled,
       }))
   );

@@ -14,7 +14,7 @@ function authorize(roles = []){
     
     async (req, res, next) => {
       const account = await db.Account.findByPk(req.user.id)
-      // console.log('ACCOUNT: ', JSON.stringify(account, null, 2))
+      
       if(!account || (roles.length && !roles.includes(account.role))){
         return res.status(401).json({ msg: 'Unauthorized' })
       }

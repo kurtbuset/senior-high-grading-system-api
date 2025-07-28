@@ -10,15 +10,15 @@ const accountService = require("../accounts/account.service");
 router.post("/authenticate", authenticateSchema, authenticate);
 router.post("/refresh-token", refreshToken);
 router.post("/revoke-token", authorize(), revokeTokenSchema, revokeToken);
-// router.post("/register", registerSchema, register);
-// router.post("/verify-email", verifyEmailSchema, verifyEmail);
+router.post("/register", registerSchema, register);
+router.post("/verify-email", verifyEmailSchema, verifyEmail);
 router.post("/forgot-password", forgotPasswordSchema, forgotPassword);
 router.post("/validate-reset-token", validateResetTokenSchema, validateResetToken); 
 router.post("/reset-password", resetPasswordSchema, resetPassword);
 
-router.get("/", authorize(Role.Admin), getAll);
+router.get("/", authorize(Role.SuperAdmin), getAll);     
 router.get("/:id", authorize(), getById);
-router.post("/", authorize(Role.Admin), createSchema, create);
+router.post("/", authorize(Role.SuperAdmin), createSchema, create);
 router.put("/:id", authorize(), updateSchema, update);
 router.delete("/:id", authorize(), _delete);
 
@@ -26,17 +26,17 @@ module.exports = router;
 
 function authenticateSchema(req, res, next) {
   const schema = Joi.object({
-    email: Joi.string().required(),
+    username: Joi.string().required(),
     password: Joi.string().required(),
   });
   validateRequest(req, next, schema);
 }
 
 function authenticate(req, res, next) {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
   const ipAddress = req.ip;
   accountService
-    .authenticate({ email, password, ipAddress })
+    .authenticate({ username, password, ipAddress })
     .then(({ refreshToken, ...account }) => {
       setTokenCookie(res, refreshToken);
       res.json(account);
@@ -85,27 +85,26 @@ function revokeToken(req, res, next) {
     .catch(next);
 }
 
-// function registerSchema(req, res, next) {
-//   const schema = Joi.object({
-//     title: Joi.string().required(),
-//     firstName: Joi.string().required(),
-//     lastName: Joi.string().required(),
-//     email: Joi.string().email().required(),
-//     password: Joi.string().min(6).required(),
-//     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-//     acceptTerms: Joi.boolean().valid(true).required(),
-//   });
-//   validateRequest(req, next, schema);
-// }
+function registerSchema(req, res, next) {
+  const schema = Joi.object({
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+    // role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
+  });
+  validateRequest(req, next, schema);
+}
 
-// function register(req, res, next) {
-//   accountService
-//     .register(req.body, req.get("origin"))
-//     .then((_) =>
-//       res.json({ msg: "registration succesful, please check your email" })
-//     )
-//     .catch(next);
-// }
+function register(req, res, next) {
+  accountService
+    .register(req.body, req.get("origin"))
+    .then((_) =>
+      res.json({ msg: "registration succesful, please check your email" })
+    )
+    .catch(next);
+}
 
 function verifyEmailSchema(req, res, next) {
   const schema = Joi.object({
@@ -196,8 +195,30 @@ function createSchema(req, res, next) {
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    role: Joi.string().valid(Role.Admin, Role.Teacher).required(),
-    isActive: Joi.boolean().required()
+    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
+    isActive: Joi.boolean().required(),
+
+    // Only required if role is Student
+    sex: Joi.when('role', {
+      is: Role.Student,
+      then: Joi.string().valid('M', 'F').required(),
+      otherwise: Joi.forbidden()
+    }),
+    address: Joi.when('role', {
+      is: Role.Student,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden()
+    }),
+    guardian_name: Joi.when('role', {
+      is: Role.Student,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden()
+    }),
+    guardian_contact: Joi.when('role', {
+      is: Role.Student,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden()
+    }),
   });
   validateRequest(req, next, schema);
 }

@@ -6,18 +6,18 @@ async function seed(){
   await db.initialize()
 
   await db.Account.create({
-    email: 'admin@gmail.com',
-    passwordHash: await bcrypt.hash('admin123', 10),
-    firstName: 'admin',
-    lastName: 'istrator',
+    email: 'sadmin@gmail.com',
+    passwordHash: await bcrypt.hash('sadmin123', 10),
+    firstName: 'super',
+    lastName: 'admin',
     isActive: 1,
     verified: Date.now(),
-    role: role.Teacher,
+    role: role.SuperAdmin,
     created: Date.now()
   })
   
   await db.Account.create({
-    email: 'maria@gmail.com',
+    email: 'yams@gmail.com',
     passwordHash: await bcrypt.hash('maria123', 10),
     firstName: 'maria',
     lastName: 'teresa',
