@@ -59,28 +59,7 @@ function createSchema(req, res, next){
     school_year: Joi.string().valid('2024-2025', '2025-2026').required(),
     grade_level: Joi.string().valid('11', '12').required(),
     section: Joi.string().required(),
-    semester: Joi.string().valid('1st sem', '2nd sem').required(),
-
-    custom_ww_percent: Joi.number().min(0).max(100).allow(null),
-    custom_pt_percent: Joi.number().min(0).max(100).allow(null),
-    custom_qa_percent: Joi.number().min(0).max(100).allow(null)
-  }).custom((value, helpers) => {
-    const { custom_ww_percent, custom_pt_percent, custom_qa_percent } = value;
-    
-    // If all 3 are provided, validate that they sum to 100
-    if (
-      custom_ww_percent != null &&
-      custom_pt_percent != null &&
-      custom_qa_percent != null
-    ) {
-      const total = custom_ww_percent + custom_pt_percent + custom_qa_percent;
-      if (total !== 100) {
-        return helpers.error("any.invalid", {
-          message: "The total of WW, PT, and QA must be 100",
-        });
-      }
-    }
-    return value;
+    semester: Joi.string().valid('1st sem', '2nd sem').required()
   });
 
   validateRequest(req, next, schema)

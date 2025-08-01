@@ -82,18 +82,18 @@ async function create(params) {
     throw `Subject with ID ${params.subject_id} does not exist.`
   }
 
-  const duplicate = await db.Teacher_Subject_Assignment.findOne({
-    where: {
-      section: params.section,
-      grade_level: params.grade_level,
-      semester: params.semester,
-      school_year: params.school_year
-    }
-  });
+  // const duplicate = await db.Teacher_Subject_Assignment.findOne({
+  //   where: {
+  //     section: params.section,
+  //     grade_level: params.grade_level,
+  //     semester: params.semester,
+  //     school_year: params.school_year
+  //   }
+  // });
 
-  if (duplicate) {
-    throw`Section "${params.section}" already exists for Grade ${params.grade_level}, ${params.semester}, SY ${params.school_year}.`;
-  }
+  // if (duplicate) {
+  //   throw`Section "${params.section}" already exists for Grade ${params.grade_level}, ${params.semester}, SY ${params.school_year}.`;
+  // }
 
    const data = {
     ...params,

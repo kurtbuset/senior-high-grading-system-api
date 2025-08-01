@@ -15,7 +15,7 @@ function model(sequelize){
     },
     school_id: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false, 
     },
     sex: {
       type: DataTypes.ENUM('M', 'F'),

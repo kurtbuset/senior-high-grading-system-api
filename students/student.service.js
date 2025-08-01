@@ -2,7 +2,13 @@ const db = require("../_helpers/db");
 
 module.exports = {
   create,
+  getStudentInfo
 };
+
+
+async function getStudentInfo(id){
+  console.log('account id: ', id)
+}
 
 
 async function create(params) {
