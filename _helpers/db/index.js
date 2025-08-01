@@ -1,15 +1,22 @@
 const config = require("../../config.json");
 const mysql = require("mysql2/promise");
 const { Sequelize } = require("sequelize");
+require('dotenv').config();
 
 const defineAssociations = require('./associations')
 
 module.exports = db = {};
 
-// const db = {};
+
 
 async function initialize() {
-  const { host, port, user, password, database } = config.database;
+  // const { host, port, user, password, database } = config.database;
+  const host = process.env.DB_HOST;
+  const port = process.env.DB_PORT || 3306;
+  const user = process.env.DB_USER;
+  const password = process.env.DB_PASS;
+  const database = process.env.DB_NAME; 
+  
   const connection = await mysql.createConnection({
     host,
     port,
@@ -23,7 +30,7 @@ async function initialize() {
   });
 
   db.sequelize = sequelize;
-  db.Sequelize = Sequelize;
+  db.Sequelize = Sequelize; 
 
   db.Account = require("../../accounts/account.model")(sequelize);
   db.refreshToken = require("../../accounts/refresh-token.model")(sequelize);
@@ -44,6 +51,3 @@ async function initialize() {
 
 initialize();
 
-// db.initialize = initialize;
-
-// module.exports = db;
