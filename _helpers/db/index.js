@@ -11,12 +11,12 @@ module.exports = db = {};
 
 async function initialize() {
   // const { host, port, user, password, database } = config.database;
-  const host = process.env.DB_HOST;
+  const host = process.env.DB_HOST; 
   const port = process.env.DB_PORT || 3306;
   const user = process.env.DB_USER;
   const password = process.env.DB_PASS;
   const database = process.env.DB_NAME; 
-  
+
   const connection = await mysql.createConnection({
     host,
     port,

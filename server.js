@@ -35,6 +35,6 @@ app.use('/api-docs', require('./_helpers/swagger'))
 // global error handler
 app.use(errorHandler) 
 
-const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000
+const port = process.env.NODE_ENV === 'production' ? (process.env.DB_PORT || 80) : 4000
 app.listen(port, _ => { console.log(`LISTENING ON PORT ${port}`)})  
 
