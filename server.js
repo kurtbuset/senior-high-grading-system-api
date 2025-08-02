@@ -13,7 +13,7 @@ app.use(cookieParser())
 
 // ilisda ang origin if production na
 // e.g. origin: 'https://your-frontend-domain.com',
-app.use(cors({ origin: 'senior-high-grading-system-ui-git-main-kurtbusets-projects.vercel.app', credentials: true }))
+app.use(cors({ origin: 'https://senior-high-grading-system-ui.vercel.app/', credentials: true }))
 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'))
