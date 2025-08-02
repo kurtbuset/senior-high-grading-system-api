@@ -29,7 +29,7 @@ async function initialize() {
     host,
     port,
     dialect: "mysql",
-    logging: false
+    logging: false  
   });
 
   db.sequelize = sequelize;

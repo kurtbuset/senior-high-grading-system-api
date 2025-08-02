@@ -18,7 +18,7 @@ router.put('/:id', authorize(), updateStudentEnrollment)
 module.exports = router
 
 
-function getEnrolledStudents(req, res, next){
+function  getEnrolledStudents(req, res, next){
   enrollmentService
     .getEnrolledStudents(req.params.id)
     .then(students => {
