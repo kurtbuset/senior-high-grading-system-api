@@ -79,7 +79,11 @@ function revokeToken(req, res, next) {
     .revokeToken({ token, ipAddress })
     .then((_) =>{
       // remove refresh token from cookie
-      res.clearCookie('refreshToken');
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
+      });
       res.json({ msg: "Token revoked" })
     })
     .catch(next);
