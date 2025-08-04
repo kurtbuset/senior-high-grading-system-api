@@ -10,7 +10,7 @@ const accountService = require("../accounts/account.service");
 router.post("/authenticate", authenticateSchema, authenticate);
 router.post("/refresh-token", refreshToken);
 router.post("/revoke-token", authorize(), revokeTokenSchema, revokeToken);
-router.post("/register", registerSchema, register);
+// router.post("/register", registerSchema, register);
 router.post("/verify-email", verifyEmailSchema, verifyEmail);
 router.post("/forgot-password", forgotPasswordSchema, forgotPassword);
 router.post("/validate-reset-token", validateResetTokenSchema, validateResetToken); 
@@ -89,26 +89,26 @@ function revokeToken(req, res, next) {
     .catch(next);
 }
 
-function registerSchema(req, res, next) {
-  const schema = Joi.object({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).required(),
-    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    // role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
-  });
-  validateRequest(req, next, schema);
-}
+// function registerSchema(req, res, next) {
+//   const schema = Joi.object({
+//     firstName: Joi.string().required(),
+//     lastName: Joi.string().required(),
+//     email: Joi.string().email().required(),
+//     password: Joi.string().min(6).required(),
+//     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+//     // role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
+//   });
+//   validateRequest(req, next, schema);
+// }
 
-function register(req, res, next) {
-  accountService
-    .register(req.body, req.get("origin"))
-    .then((_) =>
-      res.json({ msg: "registration succesful, please check your email" })
-    )
-    .catch(next);
-}
+// function register(req, res, next) {
+//   accountService
+//     .register(req.body, req.get("origin"))
+//     .then((_) =>
+//       res.json({ msg: "registration succesful, please check your email" })
+//     )
+//     .catch(next);
+// }
 
 function verifyEmailSchema(req, res, next) {
   const schema = Joi.object({
