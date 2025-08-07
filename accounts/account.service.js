@@ -5,7 +5,6 @@ const crypto = require('crypto')
 const { Op } = require('sequelize')
 const sendEmail = require('../_helpers/send-email')
 const db = require('../_helpers/db')
-const Role = require('../_helpers/role')
 
 module.exports = {
   authenticate,
@@ -194,49 +193,26 @@ async function create(params) {
     firstName: params.firstName,
     lastName: params.lastName,
     role: params.role,
-    isActive: params.isActive,
+    isActive: true,
     verified: Date.now()
   });
 
   await account.save()
 
    // If role is Student, generate school_id and insert student info
-  if (params.role === Role.Student) {
-    const school_id = await generateSchoolId();
-    await db.Student.create({
-      account_id: account.id,
-      school_id,
-      sex: params.sex,
-      address: params.address,
-      guardian_name: params.guardian_name,
-      guardian_contact: params.guardian_contact
-    });
-  }
+  // if (params.role === Role.Student) {
+  //   const school_id = await generateSchoolId();
+  //   await db.Student.create({
+  //     account_id: account.id,
+  //     school_id,
+  //     sex: params.sex,
+  //     address: params.address,
+  //     guardian_name: params.guardian_name,
+  //     guardian_contact: params.guardian_contact
+  //   });
+  // }
   
   return basicDetails(account)
-}
-
-async function generateSchoolId() {
-  const year = new Date().getFullYear();
-
-  // Count how many students exist this year
-  const latest = await db.Student.findAll({
-    where: {
-      school_id: {
-        [db.Sequelize.Op.like]: `${year}-%`
-      }
-    },
-    order: [['school_id', 'DESC']],
-    limit: 1
-  });
-
-  let nextNumber = 1;
-  if (latest.length) {
-    const lastId = latest[0].school_id.split('-')[1]; // e.g. 00001
-    nextNumber = parseInt(lastId) + 1;
-  }
-
-  return `${year}-${String(nextNumber).padStart(5, '0')}`; // e.g. 2025-00001
 }
 
 

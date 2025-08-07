@@ -31,15 +31,15 @@ async function superAdminSeed(){
     }
 
     await Account.bulkCreate([
-      {
+      { 
         firstName: "super",
         lastName: "admin",
         email: "superadmin@gmail.com",
-        password: await bcrypt.hash('sadmin123', 10),
+        passwordHash: await bcrypt.hash('sadmin123', 10),
         isActive: 1,
         verified: Date.now(),
         role: role.SuperAdmin,
-        created: Date.now()
+        created: Date.now() 
       }
     ])
   } catch (error) {

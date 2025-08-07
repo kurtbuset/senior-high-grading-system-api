@@ -11,11 +11,9 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true}))
 app.use(cookieParser())
 
-// ilisda ang origin if production na
-// e.g. origin: 'https://your-frontend-domain.com',
 // app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
-
-// prod mode
+  
+// production mode
 app.use(cors({ origin: 'https://senior-high-grading-system-ui.vercel.app', credentials: true }))
 
 // api routes

@@ -199,40 +199,17 @@ function createSchema(req, res, next) {
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
-    isActive: Joi.boolean().required(),
-
-    // Only required if role is Student
-    sex: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().valid('M', 'F').required(),
-      otherwise: Joi.forbidden()
-    }),
-    address: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
-    guardian_name: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
-    guardian_contact: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
+    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher).required()
   });
   validateRequest(req, next, schema);
 }
 
 function create(req, res, next) {
-  accountService
+  accountService  
     .create(req.body)
     .then((account) => res.json(account))
     .catch(next);
-}
+} 
 
 function updateSchema(req, res, next) {
   const schemaRules = {
