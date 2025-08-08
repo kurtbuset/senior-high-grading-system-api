@@ -10,7 +10,7 @@ module.exports = {
   authenticate,
   refreshToken,
   revokeToken,
-  // register,
+  register,
   verifyEmail,
   forgotPassword,
   validateResetToken,

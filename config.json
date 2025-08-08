@@ -4,7 +4,7 @@
     "port": 3306,
     "user": "root",
     "password": "password",
-    "database": "senior-high-db"
+    "database": "senior_high_db"
   },
   "secret": "kortbuset",
   "emailFrom": "info@node-mysql-signup-verification-api.com",
