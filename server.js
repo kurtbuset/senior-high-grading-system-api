@@ -11,10 +11,10 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true}))
 app.use(cookieParser())
 
-// app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
+app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
   
 // production mode
-app.use(cors({ origin: 'https://senior-high-grading-system-ui.vercel.app', credentials: true }))
+// app.use(cors({ origin: 'https://senior-high-grading-system-ui.vercel.app', credentials: true }))
 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'))
@@ -32,7 +32,7 @@ app.use('/quizzes', require('./quizzes/quiz.controller'))
 app.use('/quiz-scores', require('./quiz_scores/quiz_score.controller'))
 
 app.use('/api-docs', require('./_helpers/swagger'))
-
+  
 // global error handler
 app.use(errorHandler) 
 

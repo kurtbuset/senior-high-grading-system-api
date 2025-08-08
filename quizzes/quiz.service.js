@@ -1,4 +1,5 @@
 const db = require("../_helpers/db");
+const { fn, col } = require("sequelize");
 
 module.exports = {
   addQuiz,
@@ -40,13 +41,26 @@ async function updateQuiz(id, params) {
 }
 
 async function getQuizzes(teacher_subject_id, param) {
-  return db.Quiz.findAll({
+  const quizzes = await db.Quiz.findAll({
     where: {
       teacher_subject_id,
       quarter: param.quarter,
       type: param.type,
     },
-    attributes: ["id", "description", "hps"],
+    attributes: ["id", "description", "hps", "createdAt"],
+  });
+
+  return quizzes.map((q) => {
+    const quiz = q.toJSON();
+
+    // Format createdAt to "January 1, 2025"
+    quiz.createdAt = new Date(quiz.createdAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    return quiz;
   });
 }
 

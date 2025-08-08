@@ -18,8 +18,8 @@ function model(sequelize){
   }
   
   const options = {
-    timestamps: false
-  }
+    timestamps: true
+  } 
 
   return sequelize.define('quiz', attributes, options)
-}
+} 
