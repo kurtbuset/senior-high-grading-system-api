@@ -5,15 +5,16 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const errorHandler = require('_middleware/error-handler')
-
+const { superAdminSeed } = require('./_seeders/super-admin-seeder')
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true}))
 app.use(cookieParser())
 
-// ilisda ang origin if production na
-// e.g. origin: 'https://your-frontend-domain.com',
-app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
+// app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
+  
+// production mode
+app.use(cors({ origin: 'https://senior-high-grading-system-ui.vercel.app', credentials: true }))
 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'))
@@ -34,6 +35,8 @@ app.use('/api-docs', require('./_helpers/swagger'))
 
 // global error handler
 app.use(errorHandler) 
+
+superAdminSeed()
 
 const port = process.env.NODE_ENV === 'production' ? (process.env.DB_PORT || 80) : 4000
 app.listen(port, _ => { console.log(`LISTENING ON PORT ${port}`)})  

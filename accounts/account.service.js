@@ -5,13 +5,12 @@ const crypto = require('crypto')
 const { Op } = require('sequelize')
 const sendEmail = require('../_helpers/send-email')
 const db = require('../_helpers/db')
-const Role = require('../_helpers/role')
 
 module.exports = {
   authenticate,
   refreshToken,
   revokeToken,
-  register,
+  // register,
   verifyEmail,
   forgotPassword,
   validateResetToken,
@@ -103,28 +102,28 @@ async function revokeToken({ token, ipAddress }) {
 }
 
 
-async function register(params, origin) {
-  // validate
-  console.log(JSON.stringify(params, null, 2))
-  if(await db.Account.findOne({ where: { email: params.email}})) {
-    return await sendAlreadyRegisteredEmail(params.email, origin)
-  }
+// async function register(params, origin) {
+//   // validate
+//   console.log(JSON.stringify(params, null, 2))
+//   if(await db.Account.findOne({ where: { email: params.email}})) {
+//     return await sendAlreadyRegisteredEmail(params.email, origin)
+//   }
 
-  // create account object
-  const account = new db.Account(params)
+//   // create account object
+//   const account = new db.Account(params)
   
-  // first registered account is an admin
-  const isFirstAccount = (await db.Account.count()) === 0
-  account.role = isFirstAccount ? Role.SuperAdmin : params.role
-  account.verificationToken = randomTokenString()
-  account.isActive = true
-  // hash password
-  account.passwordHash = await hash(params.password)
+//   // first registered account is an admin
+//   const isFirstAccount = (await db.Account.count()) === 0
+//   account.role = isFirstAccount ? Role.SuperAdmin : params.role
+//   account.verificationToken = randomTokenString()
+//   account.isActive = true
+//   // hash password
+//   account.passwordHash = await hash(params.password)
 
-  await account.save()
+//   await account.save()
 
-  await sendVerificationEmail(account, origin)
-}
+//   await sendVerificationEmail(account, origin)
+// }
 
 async function verifyEmail({ token }) {
   const account = await db.Account.findOne({ where: { verificationToken: token }})
@@ -194,49 +193,26 @@ async function create(params) {
     firstName: params.firstName,
     lastName: params.lastName,
     role: params.role,
-    isActive: params.isActive,
+    isActive: true,
     verified: Date.now()
   });
 
   await account.save()
 
    // If role is Student, generate school_id and insert student info
-  if (params.role === Role.Student) {
-    const school_id = await generateSchoolId();
-    await db.Student.create({
-      account_id: account.id,
-      school_id,
-      sex: params.sex,
-      address: params.address,
-      guardian_name: params.guardian_name,
-      guardian_contact: params.guardian_contact
-    });
-  }
+  // if (params.role === Role.Student) {
+  //   const school_id = await generateSchoolId();
+  //   await db.Student.create({
+  //     account_id: account.id,
+  //     school_id,
+  //     sex: params.sex,
+  //     address: params.address,
+  //     guardian_name: params.guardian_name,
+  //     guardian_contact: params.guardian_contact
+  //   });
+  // }
   
   return basicDetails(account)
-}
-
-async function generateSchoolId() {
-  const year = new Date().getFullYear();
-
-  // Count how many students exist this year
-  const latest = await db.Student.findAll({
-    where: {
-      school_id: {
-        [db.Sequelize.Op.like]: `${year}-%`
-      }
-    },
-    order: [['school_id', 'DESC']],
-    limit: 1
-  });
-
-  let nextNumber = 1;
-  if (latest.length) {
-    const lastId = latest[0].school_id.split('-')[1]; // e.g. 00001
-    nextNumber = parseInt(lastId) + 1;
-  }
-
-  return `${year}-${String(nextNumber).padStart(5, '0')}`; // e.g. 2025-00001
 }
 
 

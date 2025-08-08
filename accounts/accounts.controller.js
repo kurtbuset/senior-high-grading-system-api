@@ -10,7 +10,7 @@ const accountService = require("../accounts/account.service");
 router.post("/authenticate", authenticateSchema, authenticate);
 router.post("/refresh-token", refreshToken);
 router.post("/revoke-token", authorize(), revokeTokenSchema, revokeToken);
-router.post("/register", registerSchema, register);
+// router.post("/register", registerSchema, register);
 router.post("/verify-email", verifyEmailSchema, verifyEmail);
 router.post("/forgot-password", forgotPasswordSchema, forgotPassword);
 router.post("/validate-reset-token", validateResetTokenSchema, validateResetToken); 
@@ -79,32 +79,36 @@ function revokeToken(req, res, next) {
     .revokeToken({ token, ipAddress })
     .then((_) =>{
       // remove refresh token from cookie
-      res.clearCookie('refreshToken');
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
+      });
       res.json({ msg: "Token revoked" })
     })
     .catch(next);
 }
 
-function registerSchema(req, res, next) {
-  const schema = Joi.object({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).required(),
-    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    // role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
-  });
-  validateRequest(req, next, schema);
-}
+// function registerSchema(req, res, next) {
+//   const schema = Joi.object({
+//     firstName: Joi.string().required(),
+//     lastName: Joi.string().required(),
+//     email: Joi.string().email().required(),
+//     password: Joi.string().min(6).required(),
+//     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+//     // role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
+//   });
+//   validateRequest(req, next, schema);
+// }
 
-function register(req, res, next) {
-  accountService
-    .register(req.body, req.get("origin"))
-    .then((_) =>
-      res.json({ msg: "registration succesful, please check your email" })
-    )
-    .catch(next);
-}
+// function register(req, res, next) {
+//   accountService
+//     .register(req.body, req.get("origin"))
+//     .then((_) =>
+//       res.json({ msg: "registration succesful, please check your email" })
+//     )
+//     .catch(next);
+// }
 
 function verifyEmailSchema(req, res, next) {
   const schema = Joi.object({
@@ -195,40 +199,17 @@ function createSchema(req, res, next) {
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
-    isActive: Joi.boolean().required(),
-
-    // Only required if role is Student
-    sex: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().valid('M', 'F').required(),
-      otherwise: Joi.forbidden()
-    }),
-    address: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
-    guardian_name: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
-    guardian_contact: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
+    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher).required()
   });
   validateRequest(req, next, schema);
 }
 
 function create(req, res, next) {
-  accountService
+  accountService  
     .create(req.body)
     .then((account) => res.json(account))
     .catch(next);
-}
+} 
 
 function updateSchema(req, res, next) {
   const schemaRules = {
@@ -278,6 +259,8 @@ function setTokenCookie(res, token) {
   const cookieOptions = {
     httpOnly: true,
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    secure: process.env.NODE_ENV === 'production', // true only in prod
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
   };
   res.cookie("refreshToken", token, cookieOptions);
 }
