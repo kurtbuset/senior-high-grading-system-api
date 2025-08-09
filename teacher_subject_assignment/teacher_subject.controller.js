@@ -59,7 +59,7 @@ function createSchema(req, res, next){
     school_year: Joi.string().valid('2024-2025', '2025-2026').required(),
     grade_level: Joi.string().valid('11', '12').required(),
     section: Joi.string().required(),
-    semester: Joi.string().valid('1st sem', '2nd sem').required()
+    semester: Joi.string().valid('FIRST SEMESTER', 'SECOND SEMESTER').required()
   });
 
   validateRequest(req, next, schema)
@@ -70,4 +70,4 @@ function create(req, res, next){
     .create(req.body)
     .then((teacherSubject) => res.json(teacherSubject))
     .catch(next)
-}
+} 

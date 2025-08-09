@@ -32,7 +32,7 @@ function model(sequelize){
       allowNull: false
     },
     semester: {
-      type: DataTypes.ENUM('1st sem', '2nd sem'),
+      type: DataTypes.ENUM('FIRST SEMESTER', 'SECOND SEMESTER'),
       allowNull: false
     },
     custom_ww_percent: {
