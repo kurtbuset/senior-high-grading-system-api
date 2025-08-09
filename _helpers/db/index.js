@@ -10,17 +10,23 @@ module.exports = db = {};
 
 
 async function initialize() {
-  // const { host, port, user, password, database } = config.database;
   const host = process.env.DB_HOST; 
   const port = process.env.DB_PORT || 3306;
   const user = process.env.DB_USER;
   const password = process.env.DB_PASS;
   const database = process.env.DB_NAME; 
 
+  console.log('localhost: ', host)
+  console.log('port: ', port)
+  console.log('user: ', user)
+  console.log('password: ', password)
+  console.log('database: ', database)
+  
+
   const connection = await mysql.createConnection({
     host,
     port, 
-    user,
+    user, 
     password,
   });
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
@@ -29,7 +35,8 @@ async function initialize() {
     host,
     port,
     dialect: "mysql",
-    logging: false  
+    logging: false,
+    dialectOptions: { connectTimeout: 60000 }
   });
 
   db.sequelize = sequelize;
