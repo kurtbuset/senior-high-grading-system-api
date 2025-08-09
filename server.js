@@ -1,4 +1,5 @@
 require('rootpath')()
+require('dotenv').config();
 const express = require('express')
 const app = express() 
 const bodyParser = require('body-parser')
@@ -14,7 +15,7 @@ app.use(cookieParser())
 // app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
   
 // production mode
-app.use(cors({ origin: 'https://senior-high-grading-system-mxpkclw2l-kurtbusets-projects.vercel.app', credentials: true }))
+app.use(cors({ origin:  process.env.FRONTEND_URL, credentials: true }))
 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'))
