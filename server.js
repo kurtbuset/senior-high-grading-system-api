@@ -14,7 +14,7 @@ app.use(cookieParser())
 // app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
   
 // production mode
-app.use(cors({ origin: 'https://senior-high-grading-system-ui.vercel.app', credentials: true }))
+app.use(cors({ origin: 'https://senior-high-grading-system-mxpkclw2l-kurtbusets-projects.vercel.app', credentials: true }))
 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'))
