@@ -10,14 +10,12 @@ const { superAdminSeed } = require('./_seeders/super-admin-seeder')
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true}))
-app.use(cookieParser())
-
-// app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }))
+app.use(cookieParser()) 
   
 // production mode
 app.use(cors({ origin:  process.env.FRONTEND_URL, credentials: true }))
 
-// api routes
+// api routes 
 app.use('/accounts', require('./accounts/accounts.controller'))
 
 app.use('/subjects', require('./subjects/subject.controller'))

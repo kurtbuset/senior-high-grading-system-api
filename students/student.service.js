@@ -38,8 +38,9 @@ async function create(params) {
     throw `An account with the email "${email}" already exists.`
   }
 
-  // 1. Generate hashed password (or save plain password for notification before hashing)
-  const plainPassword = crypto.randomBytes(4).toString('hex'); // e.g., 'a3f9c2d1'
+  const school_id = await generateSchoolId();
+
+  const plainPassword = school_id
   const passwordHash = await bcrypt.hash(plainPassword, 10);
 
   // 2. Create the account
@@ -54,8 +55,6 @@ async function create(params) {
     created: Date.now() 
   });
 
-  // 3. Generate school ID
-  const school_id = await generateSchoolId();
 
   // 4. Create the student record and link to account
   const student = await db.Student.create({

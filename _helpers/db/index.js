@@ -24,7 +24,7 @@ async function initialize() {
   
 
   const connection = await mysql.createConnection({
-    host,
+    host, 
     port, 
     user, 
     password,
