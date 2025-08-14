@@ -103,35 +103,35 @@ async function revokeToken({ token, ipAddress }) {
 }
 
 
-// async function register(params, origin) {
-//   // validate
-//   console.log(JSON.stringify(params, null, 2))
-//   if(await db.Account.findOne({ where: { email: params.email}})) {
-//     return await sendAlreadyRegisteredEmail(params.email, origin)
-//   }
+async function register(params, origin) {
+  // validate
+  console.log(JSON.stringify(params, null, 2))
+  if(await db.Account.findOne({ where: { email: params.email}})) {
+    return await sendAlreadyRegisteredEmail(params.email, origin)
+  }
 
-//   // create account object
-//   const account = new db.Account(params)
+  // create account object
+  const account = new db.Account(params)
   
-//   // first registered account is an admin
-//   const isFirstAccount = (await db.Account.count()) === 0
-//   account.role = isFirstAccount ? Role.SuperAdmin : params.role
-//   account.verificationToken = randomTokenString()
-//   account.isActive = true
-//   // hash password
-//   account.passwordHash = await hash(params.password)
+  // first registered account is an admin
+  const isFirstAccount = (await db.Account.count()) === 0
+  account.role = isFirstAccount ? Role.SuperAdmin : params.role
+  account.verificationToken = randomTokenString()
+  account.isActive = true
+  // hash password
+  account.passwordHash = await hash(params.password)
 
-//   await account.save()
+  await account.save()
 
-//   await sendVerificationEmail(account, origin)
-// }
+  await sendVerificationEmail(account, origin)
+}
 
 async function verifyEmail({ token }) {
   const account = await db.Account.findOne({ where: { verificationToken: token }})
 
   if (!account) throw 'Verification failed'
 
-  account.verified = Date.now()
+  account.isVerified = true
   account.verificationToken = null
   await account.save()
 }
@@ -166,7 +166,7 @@ async function resetPassword({ token, password}) {
   const account = await validateResetToken({ token })
   
   account.passwordHash = await hash(password)
-  account.passwordReset = Date.now()
+  account.resetTokenExpires = null
   account.resetToken = null
   await account.save()
 }
@@ -195,7 +195,7 @@ async function create(params) {
     lastName: params.lastName,
     role: params.role,
     isActive: params.isActive,
-    verified: Date.now()
+    isVerified: true
   });
 
   await account.save()
@@ -243,7 +243,9 @@ async function generateSchoolId() {
 async function update(id, params) {
   const account = await getAccount(id)
 
-  if(params.email && account.email !== params.email && await db.Account.findOne({ where: { email: params.email}}))
+  if(params.email && account.email !== params.email && await db.Account.findOne({ where: { email: params.email}})) {
+    throw `Email '${params.email}' is already taken`
+  }
 
   if(params.password){
     params.passwordHash = await hash(params.password)
@@ -299,10 +301,10 @@ function randomTokenString(){
 }
 
 function basicDetails(account){
-  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee } = account
+  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, Employee } = account
   // console.log(JSON.stringify(account, null, 2))
   
-  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee }
+  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, Employee }
 }
 
 

@@ -5,15 +5,20 @@ const { Sequelize, Op } = require('sequelize');
 const accountModel = require('../accounts/account.model')
 const studentModel = require('../students/student.model')
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host: process.env.DB_HOST,
-    dialect: 'mysql',
-  }
-);
+const config = require('../../config.json');
+
+// Use the same fallback logic as the main database connection
+const host = process.env.DB_HOST || config.database.host;
+const port = process.env.DB_PORT || config.database.port || 3306;
+const user = process.env.DB_USER || config.database.user;
+const password = process.env.DB_PASS || config.database.password;
+const database = process.env.DB_NAME || config.database.database;
+
+const sequelize = new Sequelize(database, user, password, {
+  host,
+  port,
+  dialect: 'mysql',
+});
 
 const Account = accountModel(sequelize);
 const Student = studentModel(sequelize);

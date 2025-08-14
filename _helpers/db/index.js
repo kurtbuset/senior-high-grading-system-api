@@ -10,12 +10,20 @@ module.exports = db = {};
 
 
 async function initialize() {
-  // const { host, port, user, password, database } = config.database;
-  const host = process.env.DB_HOST; 
-  const port = process.env.DB_PORT || 3306;
-  const user = process.env.DB_USER;
-  const password = process.env.DB_PASS;
-  const database = process.env.DB_NAME; 
+  // Try to get credentials from environment variables first, fallback to config.json
+  const host = process.env.DB_HOST || config.database.host;
+  const port = process.env.DB_PORT || config.database.port || 3306;
+  const user = process.env.DB_USER || config.database.user;
+  const password = process.env.DB_PASS || config.database.password;
+  const database = process.env.DB_NAME || config.database.database;
+
+  // Validate that we have the required credentials
+  if (!host || !user || !password || !database) {
+    console.error('Database configuration error: Missing required credentials');
+    console.error('Required: host, user, password, database');
+    console.error('Current values:', { host, user, password: password ? '***' : 'undefined', database });
+    process.exit(1);
+  } 
 
   const connection = await mysql.createConnection({
     host,
