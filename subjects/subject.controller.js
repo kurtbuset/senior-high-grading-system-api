@@ -15,16 +15,7 @@ module.exports = router;
 function createSchema(req, res, next) {
   const schema = Joi.object({
     name: Joi.string().required(),
-    type: Joi.string().valid(Type.Core, Type.Applied_1, Type.Applied_2, Type.Specialized).required(),
-    default_ww_percent: Joi.number().max(100).required(),
-    default_pt_percent: Joi.number().max(100).required(),
-    default_qa_percent: Joi.number().max(100).required()
-  }).custom((value, helpers) => {
-    const total = value.default_ww_percent + value.default_pt_percent + value.default_qa_percent
-    if (total > 100) {
-      return helpers.message('The sum of WW, PT, and QA percentages must not exceed 100')
-    }
-    return value
+    type: Joi.string().valid(Type.Core, Type.Applied, Type.Specialized_GAS, Type.Specialized_ABM, Type.Specialized_HUMMS, Type.Specialized_STEM).required()
   })
 
   validateRequest(req, next, schema)

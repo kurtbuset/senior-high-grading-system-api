@@ -42,17 +42,17 @@ async function initialize() {
   db.sequelize = sequelize;
   db.Sequelize = Sequelize; 
 
-  db.Account = require("../../accounts/account.model")(sequelize);
+  db.Account = require("../../_models/account.model")(sequelize);
   db.refreshToken = require("../../accounts/refresh-token.model")(sequelize);
-  db.Subject = require("../../subjects/subject.model")(sequelize);
+  db.Subject = require("../../_models/subject.model")(sequelize);
   db.Teacher_Subject_Assignment =
-    require("../../teacher_subject_assignment/teacher_subject.model")(
+    require("../../_models/teacher_subject.model")(
       sequelize
     );
-  db.Student = require("../../students/student.model")(sequelize);
+  db.Student = require("../../_models/student.model")(sequelize);
   db.Enrollment = require("../../enrollments/enrollment.model")(sequelize);
-  db.Quiz = require("../../quizzes/quiz.model")(sequelize);
-  db.Quiz_Score = require('../../quiz_scores/quiz_score.model')(sequelize)
+  db.Quiz = require("../../_models/quiz.model")(sequelize);
+  db.Quiz_Score = require('../../_models/quiz_score.model')(sequelize)
 
   defineAssociations(db)
 

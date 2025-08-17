@@ -57,15 +57,18 @@ function createSchema(req, res, next){
     teacher_id: Joi.number().required(),
     subject_id: Joi.number().required(),
     school_year: Joi.string().valid('2024-2025', '2025-2026').required(),
-    grade_level: Joi.string().valid('11', '12').required(),
+    grade_level: Joi.string().valid('11', '12').required(), 
     section: Joi.string().required(),
-    semester: Joi.string().valid('FIRST SEMESTER', 'SECOND SEMESTER').required()
-  });
+    semester: Joi.string().valid('FIRST SEMESTER', 'SECOND SEMESTER').required(),
+    custom_ww_percent: Joi.number().max(99).required(),
+    custom_pt_percent: Joi.number().max(99).required(),
+    custom_qa_percent: Joi.number().max(99).required()
+  })
 
   validateRequest(req, next, schema)
 }
 
-function create(req, res, next){
+function create(req, res, next){  
   teacherSubjectService
     .create(req.body)
     .then((teacherSubject) => res.json(teacherSubject))

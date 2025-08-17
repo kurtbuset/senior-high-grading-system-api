@@ -22,7 +22,7 @@ module.exports = function defineAssociations(db){
   });
 
   // Subject → TeacherSubjectAssignmen
-  // one to many (one subject appears in many assignments but with diff sections)
+  // one to many (one subject appears in many assignments but with diff sections) 
   db.Subject.hasMany(db.Teacher_Subject_Assignment, {
     foreignKey: "subject_id",
   });
@@ -30,6 +30,8 @@ module.exports = function defineAssociations(db){
     foreignKey: "subject_id",
   });
 
+
+  
   // Many-to-Many: Student ↔ TeacherSubjectAssignment (through Enrollment)
   db.Student.belongsToMany(db.Teacher_Subject_Assignment, {
     through: db.Enrollment,
@@ -52,11 +54,6 @@ module.exports = function defineAssociations(db){
   db.Student.hasMany(db.Enrollment, { foreignKey: "student_id" });
   db.Teacher_Subject_Assignment.hasMany(db.Enrollment, {
     foreignKey: "teacher_subject_id",
-  });
-
-  // in your Sequelize setup file
-  db.Teacher_Subject_Assignment.belongsTo(db.Subject, {
-    foreignKey: "subject_id",
   });
 
   // teacher_subject_assignment → quizzes

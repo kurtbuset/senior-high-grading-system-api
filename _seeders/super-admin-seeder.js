@@ -2,7 +2,7 @@ require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const role = require('../_helpers/role');
 const { Sequelize } = require('sequelize');
-const accountModel = require('../accounts/account.model');
+const accountModel = require('../_models/account.model');
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
