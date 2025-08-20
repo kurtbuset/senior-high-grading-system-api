@@ -21,17 +21,12 @@ function model(sequelize){
       type: DataTypes.ENUM('M', 'F'),
       allowNull: false
     },
-    grade_level: {
-      type: DataTypes.ENUM('11', '12'),
-      allowNull: false
+    homeroom_id: { type: DataTypes.INTEGER, allowNull: false, references: {
+        model: 'homerooms', // must match the table name
+        key: 'id'
+      }
     },
-    strand: {
-      type: DataTypes.ENUM('STEM', 'ABM', 'HUMMS', 'GAS'),
-      allowNull: false
-    },
-    address: { type: DataTypes.STRING },
-    guardian_name: { type: DataTypes.STRING },
-    guardian_contact: { type: DataTypes.STRING }
+    address: { type: DataTypes.STRING }
   };
   
   const options = {

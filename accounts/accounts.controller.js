@@ -50,7 +50,7 @@ function refreshToken(req, res, next) {
   accountService
     .refreshToken({ token, ipAddress })
     .then(({ refreshToken, ...account }) => {
-      // add new refresh token from cookie
+      // add new refresh token to cookie
       setTokenCookie(res, refreshToken);
       res.json(account);
     })
@@ -67,8 +67,6 @@ function revokeTokenSchema(req, res, next) {
 function revokeToken(req, res, next) {
   const token = req.body.token || req.cookies.refreshToken;
   const ipAddress = req.ip;
-  console.log('token: ', req.cookies.refreshToken)
-  // console.log('ipAddress', req.ip)
   if (!token) return res.status(400).json({ msg: "Token is expired" });
 
   if (!req.user.ownsToken(token) && req.user.role !== Role.Admin) {

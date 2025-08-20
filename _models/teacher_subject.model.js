@@ -14,8 +14,8 @@ function model(sequelize){
       }
       // You can add validate logic later to enforce role = 'teacher'
     },
-    subject_id: { type: DataTypes.INTEGER, allowNull: false, references: {
-        model: 'subjects', // must match the table name
+    curriculum_subject_id: { type: DataTypes.INTEGER, allowNull: false, references: {
+        model: 'curriculum_subjects', // must match the table name
         key: 'id'
       }
     },
@@ -23,17 +23,10 @@ function model(sequelize){
       type: DataTypes.ENUM('2024-2025', '2025-2026'),
       allowNull: false
     },
-    grade_level: {
-      type: DataTypes.ENUM('11', '12'),
-      allowNull: false
-    },
-    section: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    semester: {
-      type: DataTypes.ENUM('FIRST SEMESTER', 'SECOND SEMESTER'),
-      allowNull: false
+    homeroom_id: { type: DataTypes.INTEGER, allowNull: false, references: {
+        model: 'homerooms', // must match the table name
+        key: 'id'
+    } 
     },
     custom_ww_percent: {
       type: DataTypes.INTEGER
@@ -48,7 +41,7 @@ function model(sequelize){
 
   const options = {
     timestamps: false
-  }
+  } 
 
   return sequelize.define('teacher_subject_assignment', attributes, options)
 }

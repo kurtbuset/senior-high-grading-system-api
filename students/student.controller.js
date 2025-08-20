@@ -7,24 +7,16 @@ const validateRequest = require("../_middleware/validate-request");
 const studentService = require('./student.service')
 
 
-router.get('/egrades/:id', authorize(), getStudentInfo)
-router.get('/:id', authorize(), getSubjectGrades)
+router.get('/egrades/:id', authorize(), getSubjectAndGrades)
 router.post('/', authorize(Role.Admin), createSchema, create)
 
 
 module.exports = router
 
 
-function getSubjectGrades(req, res, next){
+function getSubjectAndGrades(req, res, next){
   studentService
-    .getSubjectGrades(req.params.id)
-    .then((student) => res.json(student))
-    .catch(next)
-}
-
-function getStudentInfo(req, res, next){
-  studentService
-    .getStudentInfo(req.params.id)
+    .getSubjectAndGrades(req.params.id)
     .then((student) => res.json(student))
     .catch(next)
 }
@@ -35,19 +27,16 @@ function createSchema(req, res, next){
     lastName: Joi.string().required(),
     sex: Joi.string().valid('M', 'F').required(),
     email: Joi.string().email().required(),
-    grade_level: Joi.string().valid('11', '12').required(),
-    strand: Joi.string().valid('STEM', 'ABM', 'HUMMS', 'GAS').required(),
-    address: Joi.string().optional(),
-    guardian_name: Joi.string().optional(),
-    guardian_contact: Joi.string().optional(),
+    homeroom_id: Joi.number().required(),
+    address: Joi.string().optional()
   })
 
   validateRequest(req, next, schema)
 }
 
-function create(req, res, next){
+function create(req, res, next){  
   studentService
     .create(req.body)
     .then((student) => res.json(student))
     .catch(next)
-}
+} 

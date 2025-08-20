@@ -65,6 +65,7 @@ async function finalizeAuth(account, ipAddress) {
   const refreshToken = generateRefreshToken(account, ipAddress);
   await refreshToken.save();
 
+  console.log(account.id)
   return {
     ...basicDetails(account),
     jwtToken,
@@ -86,7 +87,7 @@ async function refreshToken({ token, ipAddress }) {
   await newRefreshToken.save()
 
   const jwtToken = generateJwtToken(account)
-
+ 
   return {
     ...basicDetails(account),
     jwtToken, 
@@ -198,19 +199,6 @@ async function create(params) {
   });
 
   await account.save()
-
-   // If role is Student, generate school_id and insert student info
-  // if (params.role === Role.Student) {
-  //   const school_id = await generateSchoolId();
-  //   await db.Student.create({
-  //     account_id: account.id,
-  //     school_id,
-  //     sex: params.sex,
-  //     address: params.address,
-  //     guardian_name: params.guardian_name,
-  //     guardian_contact: params.guardian_contact
-  //   });
-  // }
   
   return basicDetails(account)
 }
@@ -276,7 +264,6 @@ function randomTokenString(){
 
 function basicDetails(account){
   const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee } = account
-  // console.log(JSON.stringify(account, null, 2))
   
   return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee }
 }

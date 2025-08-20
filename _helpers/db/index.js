@@ -40,17 +40,21 @@ async function initialize() {
   });
 
   db.sequelize = sequelize;
-  db.Sequelize = Sequelize; 
+  db.Sequelize = Sequelize;   
 
   db.Account = require("../../_models/account.model")(sequelize);
-  db.refreshToken = require("../../accounts/refresh-token.model")(sequelize);
+  db.refreshToken = require("../../_models/refresh-token.model")(sequelize);
+  db.Strand = require('../../_models/strand.model')(sequelize)
+  db.Grade_Level = require('../../_models/grade_level.model')(sequelize)
+  db.HomeRoom = require('../../_models/homeroom.model')(sequelize)
   db.Subject = require("../../_models/subject.model")(sequelize);
+  db.Curriculum_Subject = require('../../_models/curriculum_subject.model')(sequelize)
   db.Teacher_Subject_Assignment =
     require("../../_models/teacher_subject.model")(
       sequelize
     );
   db.Student = require("../../_models/student.model")(sequelize);
-  db.Enrollment = require("../../enrollments/enrollment.model")(sequelize);
+  db.Enrollment = require("../../_models/enrollment.model")(sequelize);
   db.Quiz = require("../../_models/quiz.model")(sequelize);
   db.Quiz_Score = require('../../_models/quiz_score.model')(sequelize)
 

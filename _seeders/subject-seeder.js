@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
-const subjectModel = require('../subjects/subject.model');
+const subjectModel = require('../_models/subject.model');
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
