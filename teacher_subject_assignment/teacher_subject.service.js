@@ -80,8 +80,6 @@ async function getOneSubject(id) {
     ],
   });
 
-  // console.log(JSON.stringify(subject, null, 2))
-
   if (!subject) {
     throw `No subject assignment found with ID ${id}.`;
   }

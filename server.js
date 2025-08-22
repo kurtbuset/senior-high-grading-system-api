@@ -32,6 +32,8 @@ app.use('/quiz-scores', require('./quiz_scores/quiz_score.controller'))
 
 app.use('/curriculum-subjects', require('./curriculum_subjects/curriculum_subject.controller'))
 
+app.use('/homerooms', require('./homerooms/homeroom.controller'))
+
 app.use('/api-docs', require('./_helpers/swagger'))
   
 // global error handler
