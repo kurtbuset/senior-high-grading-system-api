@@ -55,18 +55,12 @@ function basicDetails(subject) {
   const {
     id,
     name,
-    type,
-    default_ww_percent,
-    default_pt_percent,
-    default_qa_percent,
+    type
   } = subject;
 
   return {
     id,
     name,
-    type,
-    default_ww_percent,
-    default_pt_percent,
-    default_qa_percent,
+    type
   };
 }
