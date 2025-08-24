@@ -16,7 +16,7 @@ app.use(cookieParser())
 app.use(cors({ origin:  process.env.FRONTEND_URL, credentials: true }))
 
 // api routes 
-app.use('/accounts', require('./accounts/accounts.controller'))
+app.use('/accounts', require('./accounts/accounts.controller')) 
 
 app.use('/subjects', require('./subjects/subject.controller'))
 
@@ -33,6 +33,9 @@ app.use('/quiz-scores', require('./quiz_scores/quiz_score.controller'))
 app.use('/curriculum-subjects', require('./curriculum_subjects/curriculum_subject.controller'))
 
 app.use('/homerooms', require('./homerooms/homeroom.controller'))
+
+
+app.use('/final-grades', require('./final_grades/final-grade.controller'))
 
 app.use('/api-docs', require('./_helpers/swagger'))
   

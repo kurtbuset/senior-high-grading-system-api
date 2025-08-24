@@ -22,108 +22,128 @@ async function seed() {
     await curriculumSubject.sync(); // Ensure table exists
 
     await curriculumSubject.bulkCreate([
-      // {
-      //   subject_id: 1,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 3,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 5,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 7,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 10,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 14,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 17,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 31,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 35,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 32,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
+      {
+        subject_id: 1,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 3,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 5,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 7,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 10,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 14,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 17,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 31,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 35,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
+      {
+        subject_id: 32,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'FIRST SEMESTER'
+      },
 
-      // // humms 11 2nd sem
-      // {
-      //   subject_id: 2,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 4,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 6,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 9,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 16,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 18,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 22,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 26,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 49,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
-      // {
-      //   subject_id: 52,
-      //   grade_level_id: 1,
-      //   strand_id: 2
-      // },
+      // humms 11 2nd sem
+      {
+        subject_id: 2,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 4,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 6,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 9,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 16,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 18,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 22,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 26,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 49,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
+      {
+        subject_id: 52,
+        grade_level_id: 1,
+        strand_id: 2,
+        semester: 'SECOND SEMESTER'
+      },
       // 12 humms 1st sem
       {
         subject_id: 11,

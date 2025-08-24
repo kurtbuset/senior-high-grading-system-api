@@ -40,6 +40,7 @@ async function updateQuiz(id, params) {
 }
 
 async function getQuizzes(teacher_subject_id, param) {
+  console.log(param)
   const quizzes = await db.Quiz.findAll({
     where: {
       teacher_subject_id,

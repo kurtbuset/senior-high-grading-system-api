@@ -26,7 +26,7 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host, 
     port, 
-    user, 
+    user,   
     password,
   });
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
@@ -51,15 +51,17 @@ async function initialize() {
   db.Curriculum_Subject = require('../../_models/curriculum_subject.model')(sequelize)
   db.Teacher_Subject_Assignment =
     require("../../_models/teacher_subject.model")(
-      sequelize
+      sequelize 
     );
   db.Student = require("../../_models/student.model")(sequelize);
   db.Enrollment = require("../../_models/enrollment.model")(sequelize);
   db.Quiz = require("../../_models/quiz.model")(sequelize);
   db.Quiz_Score = require('../../_models/quiz_score.model')(sequelize)
+  db.Final_Grade = require('../../_models/final_grade.model')(sequelize)
+  db.Assignment_Quarter_Lock = require('../../_models/assignment_quarter_lock.model')(sequelize)
 
   defineAssociations(db)
-
+    
   await sequelize.sync({ alter: true });
 }
 
