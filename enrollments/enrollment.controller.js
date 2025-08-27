@@ -10,7 +10,7 @@ const enrollmentService = require('./enrollment.service')
 
 router.get('/enrolled/:id', authorize(), getEnrolledStudents)
 router.get('/:id', authorize(), getStudentsByTeacherSubjectId)
-router.post('/', authorize(Role.Admin), createSchema, create)
+router.post('/', authorize(Role.Registrar), createSchema, create)
 
 // kuwangan pa ug schema for postman testing
 router.put('/:id', authorize(), updateStudentEnrollment)

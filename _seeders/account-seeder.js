@@ -25,13 +25,23 @@ async function seed() {
 
     await Account.bulkCreate([
       {
-        firstName: 'admin',
-        lastName: "istrator",
-        email: "admin@gmail.com",
-        passwordHash: await bcrypt.hash('admin123', 10),
+        firstName: 'prin',
+        lastName: "cipal",
+        email: "principal@gmail.com",
+        passwordHash: await bcrypt.hash('principal123', 10),
         isActive: 1,
         verified: Date.now(),
-        role: role.Admin,
+        role: role.Principal,
+        created: Date.now()
+      },
+      {
+        firstName: 'regis',
+        lastName: "trar",
+        email: "registrar@gmail.com",
+        passwordHash: await bcrypt.hash('registrar123', 10),
+        isActive: 1,
+        verified: Date.now(),
+        role: role.Registrar,
         created: Date.now()
       },
       {

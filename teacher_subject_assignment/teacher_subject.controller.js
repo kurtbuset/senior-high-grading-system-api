@@ -8,7 +8,7 @@ const validateRequest = require("../_middleware/validate-request");
 
 router.get('/:id', authorize(), getOneSubject);
 router.get('/list/:id', authorize(), getSubjectsByTeacherId);
-router.post('/', authorize(Role.Admin), createSchema, create)
+router.post('/', authorize(Role.Registrar), createSchema, create)
 router.put('/:id', authorize(), updatePercentagesSchema, updatePercentages)
 
 module.exports = router;

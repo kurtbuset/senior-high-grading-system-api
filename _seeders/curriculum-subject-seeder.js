@@ -65,19 +65,19 @@ async function seed() {
         semester: 'FIRST SEMESTER'
       },
       {
-        subject_id: 31,
+        subject_id: 21,
         grade_level_id: 1,
         strand_id: 2,
         semester: 'FIRST SEMESTER'
       },
       {
-        subject_id: 35,
+        subject_id: 53,
         grade_level_id: 1,
         strand_id: 2,
         semester: 'FIRST SEMESTER'
       },
       {
-        subject_id: 32,
+        subject_id: 51,
         grade_level_id: 1,
         strand_id: 2,
         semester: 'FIRST SEMESTER'

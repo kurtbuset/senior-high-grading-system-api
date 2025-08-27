@@ -8,7 +8,7 @@ const studentService = require('./student.service')
 
 
 router.get('/egrades/:id', authorize(), getSubjectAndGrades)
-router.post('/', authorize(Role.Admin), createSchema, create)
+router.post('/', authorize(Role.Registrar), createSchema, create)
 
 
 module.exports = router

@@ -6,9 +6,9 @@ const Role = require('../_helpers/role')
 const validateRequest = require("../_middleware/validate-request");
 const homeroomService = require('./homeroom.service')
 
-router.get('/', authorize(Role.Admin), getHomerooms)
-router.get('/:id', authorize(Role.Admin), getOneHomeroom)
-router.get('/conso/:id', authorize(Role.Admin), getConsolidatedSheet)
+router.get('/', authorize(), getHomerooms)
+router.get('/:id', authorize(), getOneHomeroom)
+router.get('/conso/:id', authorize(), getConsolidatedSheet)
 
 module.exports = router
 

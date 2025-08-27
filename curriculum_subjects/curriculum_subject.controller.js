@@ -7,7 +7,7 @@ const curriculumSubjectService = require('../curriculum_subjects/curriculum_subj
 const validateRequest = require("../_middleware/validate-request");
 
 
-router.post('/', authorize(Role.Admin), createSchema, create)
+router.post('/', authorize(Role.Registrar), createSchema, create)
 
 module.exports = router;
 

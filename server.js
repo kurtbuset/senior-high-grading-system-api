@@ -12,7 +12,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true}))
 app.use(cookieParser()) 
   
-// production mode
+// production mode  
 app.use(cors({ origin:  process.env.FRONTEND_URL, credentials: true }))
 
 // api routes 
@@ -34,7 +34,7 @@ app.use('/curriculum-subjects', require('./curriculum_subjects/curriculum_subjec
 
 app.use('/homerooms', require('./homerooms/homeroom.controller'))
 
-
+  
 app.use('/final-grades', require('./final_grades/final-grade.controller'))
 
 app.use('/api-docs', require('./_helpers/swagger'))
@@ -48,4 +48,4 @@ app.listen(port, async () => {
   await superAdminSeed();
 });
 
-
+    
