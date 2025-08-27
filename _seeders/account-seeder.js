@@ -56,7 +56,7 @@ async function seed() {
       },
       {
         firstName: 'Juvan',
-        lastName: "Style",
+        lastName: "Teacher",
         email: "juvan@gmail.com",
         passwordHash: await bcrypt.hash('juvan123', 10),
         isActive: 1,

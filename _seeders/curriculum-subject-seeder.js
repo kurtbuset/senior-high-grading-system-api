@@ -33,9 +33,9 @@ async function seed() {
         grade_level_id: 1,
         strand_id: 2,
         semester: 'FIRST SEMESTER'
-      },
+      },  
       {
-        subject_id: 5,
+        subject_id: 5,  
         grade_level_id: 1,
         strand_id: 2,
         semester: 'FIRST SEMESTER'

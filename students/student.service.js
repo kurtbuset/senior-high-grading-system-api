@@ -50,7 +50,7 @@ async function getSubjectAndGrades(account_id) {
       {
         model: db.Subject,
         as: "subject",
-        attributes: ["id", "name"],
+        attributes: ["id", "name", "code"],
       },
     ],
   });
@@ -131,6 +131,7 @@ async function getSubjectAndGrades(account_id) {
       return {
         id: cs.id,
         subjectName: cs.subject.name,
+        subjectCode: cs.subject.code,
         semester: cs.semester,
         hasTeacherAssigned: !!assignment,
         teacher,

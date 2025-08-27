@@ -14,7 +14,7 @@ function createSchema(req, res, next){
   const schema = Joi.object({
     teacher_subject_id: Joi.number().required(),
     quarter: Joi.string().valid('First Quarter', 'Second Quarter').required(),
-    is_locked: ,
+    // is_locked: ,
   });
 
   validateRequest(req, next, schema);
