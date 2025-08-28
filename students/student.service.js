@@ -177,7 +177,7 @@ async function create(params) {
     firstName,
     lastName,
     email,
-    passwordHash,
+    passwordHash, 
     role: Role.Student,
     isActive: true,
     verified: Date.now(),

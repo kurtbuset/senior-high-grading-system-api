@@ -8,7 +8,7 @@ const Type = require('./type')
 const Role = require('../_helpers/role')
 
 
-router.post('/', authorize(Role.Admin), createSchema, create)
+router.post('/', authorize(Role.SuperAdmin), createSchema, create)
 
 module.exports = router;
 
