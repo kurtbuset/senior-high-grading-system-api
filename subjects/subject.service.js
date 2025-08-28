@@ -18,17 +18,13 @@ function basicDetails(subject) {
     id,
     name,
     type,
-    default_ww_percent,
-    default_pt_percent,
-    default_qa_percent,
+    code
   } = subject;
 
   return {
     id,
     name,
     type,
-    default_ww_percent,
-    default_pt_percent,
-    default_qa_percent,
+    code
   };
 }
