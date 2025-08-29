@@ -2,7 +2,7 @@ services:
   - type: worker
     name: mysql-db
     env: docker
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     autoDeploy: true
     disk:
