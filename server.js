@@ -15,7 +15,7 @@ app.use(cookieParser())
 // production mode  
 app.use(cors({ origin:  process.env.FRONTEND_URL, credentials: true }))
 
-// api routes 
+// api routes   
 app.use('/accounts', require('./accounts/accounts.controller')) 
 
 app.use('/subjects', require('./subjects/subject.controller'))

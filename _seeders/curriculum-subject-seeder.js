@@ -22,7 +22,7 @@ async function seed() {
     await curriculumSubject.sync(); // Ensure table exists
 
     await curriculumSubject.bulkCreate([
-      {
+      { 
         subject_id: 1,
         grade_level_id: 1,
         strand_id: 2,
