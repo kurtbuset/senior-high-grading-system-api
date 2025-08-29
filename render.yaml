@@ -1,0 +1,11 @@
+services:
+  - type: private_service
+    name: mysql-db
+    env: docker
+    plan: starter   # or standard, depending on your needs
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10    # adjust storage size as needed
+    dockerfilePath: /docker/Dockerfile.mysql
+    autoDeploy: true
