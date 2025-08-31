@@ -6,10 +6,19 @@ const Joi = require("joi");
 const curriculumSubjectService = require('../curriculum_subjects/curriculum_subject.service')
 const validateRequest = require("../_middleware/validate-request");
 
-
+router.get('/', authorize(Role.Principal), getSubjects)
 router.post('/', authorize(Role.Registrar), createSchema, create)
 
 module.exports = router;
+
+
+
+function getSubjects(req, res, next){
+  curriculumSubjectService
+    .getSubjects()
+    .then((curriculumSubjects) => res.json(curriculumSubjects))
+    .catch(next)
+}
 
 
 function createSchema(req, res, next){

@@ -27,43 +27,47 @@ async function seed() {
       {
         grade_level_id: 1,
         section: "HUMMS A",
-        strand_id: 2
+        strand_id: 2,
+        school_year_id: 1
       },
       {
         grade_level_id: 1,
         section: "HUMMS B",
-        strand_id: 2
+        strand_id: 2,
+        school_year_id: 1
       },
       {
         grade_level_id: 2,
         section: "HUMMS C",
-        strand_id: 2
+        strand_id: 2,
+        school_year_id: 1
       },
       {
         grade_level_id: 2,
         section: "HUMMS D",
-        strand_id: 2
+        strand_id: 2,
+        school_year_id: 1
       },
-      {
-        grade_level_id: 1,
-        section: "STEM A",
-        strand_id: 1
-      },
-       {
-        grade_level_id: 1,
-        section: "STEM B",
-        strand_id: 1
-      },
-       {
-        grade_level_id: 2,
-        section: "STEM C",
-        strand_id: 1
-      },
-       {
-        grade_level_id: 2,
-        section: "STEM B",
-        strand_id: 1
-      },
+      // {
+      //   grade_level_id: 1,
+      //   section: "STEM A",
+      //   strand_id: 1
+      // },
+      //  {
+      //   grade_level_id: 1,
+      //   section: "STEM B",
+      //   strand_id: 1
+      // },
+      //  {
+      //   grade_level_id: 2,
+      //   section: "STEM C",
+      //   strand_id: 1
+      // },
+      //  {
+      //   grade_level_id: 2,
+      //   section: "STEM B",
+      //   strand_id: 1
+      // },
     ]);
 
     console.log('✅ Homerooms seeded!');

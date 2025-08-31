@@ -19,14 +19,15 @@ function model(sequelize){
     },
     sex: {
       type: DataTypes.ENUM('M', 'F'),
-      allowNull: false
+      allowNull: false  
     },
     homeroom_id: { type: DataTypes.INTEGER, allowNull: false, references: {
         model: 'homerooms', // must match the table name
         key: 'id'
       }
     },
-    address: { type: DataTypes.STRING }
+    address: { type: DataTypes.STRING }, 
+    lrn_number: { type: DataTypes.STRING, allowNull: false }
   };
   
   const options = {

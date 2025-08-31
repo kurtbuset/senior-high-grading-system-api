@@ -21,6 +21,17 @@ module.exports = function defineAssociations(db) {
     foreignKey: "account_id",
   });
 
+  // Enrollment → Final_Grade
+  db.Enrollment.hasMany(db.Final_Grade, {
+    foreignKey: "enrollment_id",
+    onDelete: "CASCADE",
+    as: "final_grades",
+  });
+  db.Final_Grade.belongsTo(db.Enrollment, {
+    foreignKey: "enrollment_id",
+    as: "enrollment",
+  });
+
   // one to many teacher_subject_assignment -> curriculum_subject
   db.Teacher_Subject_Assignment.belongsTo(db.Curriculum_Subject, {
     foreignKey: "curriculum_subject_id",
@@ -47,6 +58,17 @@ module.exports = function defineAssociations(db) {
     as: "assignments",
   });
 
+  // Curriculum_Subject → School_Year
+  db.Curriculum_Subject.belongsTo(db.School_Year, {
+    foreignKey: "school_year_id",
+    as: "school_year",
+  });
+
+  db.School_Year.hasMany(db.Curriculum_Subject, {
+    foreignKey: "school_year_id",
+    as: "curriculum_subjects",
+  });
+
   // Homeroom → Grade_Level
   db.HomeRoom.belongsTo(db.Grade_Level, {
     foreignKey: "grade_level_id",
@@ -55,6 +77,16 @@ module.exports = function defineAssociations(db) {
   db.Grade_Level.hasMany(db.HomeRoom, {
     foreignKey: "grade_level_id",
     as: "homeroom",
+  });
+
+  // Homeroom → School_Year
+  db.HomeRoom.belongsTo(db.School_Year, {
+    foreignKey: "school_year_id",
+    as: "school_year",
+  });
+  db.School_Year.hasMany(db.HomeRoom, {
+    foreignKey: "school_year_id",
+    as: "homerooms",
   });
 
   // Student → HomeRoom (many students belong to 1 homeroom)
@@ -75,6 +107,26 @@ module.exports = function defineAssociations(db) {
   db.Strand.hasMany(db.HomeRoom, {
     foreignKey: "strand_id",
     as: "homerooms",
+  });
+
+  // Student → Enrollment
+  db.Student.hasMany(db.Enrollment, {
+    foreignKey: "student_id",
+    as: "enrollments", // 👈 add alias
+  });
+  db.Enrollment.belongsTo(db.Student, {
+    foreignKey: "student_id",
+    as: "student",
+  });
+
+  // Enrollment → Teacher_Subject_Assignment
+  db.Enrollment.belongsTo(db.Teacher_Subject_Assignment, {
+    foreignKey: "teacher_subject_id",
+    as: "assignment",
+  });
+  db.Teacher_Subject_Assignment.hasMany(db.Enrollment, {
+    foreignKey: "teacher_subject_id",
+    as: "enrollments",
   });
 
   // Many-to-Many: Student ↔ TeacherSubjectAssignment (through Enrollment)

@@ -40,12 +40,13 @@ async function initialize() {
   });
 
   db.sequelize = sequelize;
-  db.Sequelize = Sequelize;   
+  db.Sequelize = Sequelize;     
 
   db.Account = require("../../_models/account.model")(sequelize);
   db.refreshToken = require("../../_models/refresh-token.model")(sequelize);
   db.Strand = require('../../_models/strand.model')(sequelize)
-  db.Grade_Level = require('../../_models/grade_level.model')(sequelize)
+  db.School_Year = require('../../_models/school_year.model')(sequelize)
+  db.Grade_Level = require('../../_models/grade_level.model')(sequelize)  
   db.HomeRoom = require('../../_models/homeroom.model')(sequelize)
   db.Subject = require("../../_models/subject.model")(sequelize);
   db.Curriculum_Subject = require('../../_models/curriculum_subject.model')(sequelize)
@@ -58,7 +59,7 @@ async function initialize() {
   db.Quiz = require("../../_models/quiz.model")(sequelize);
   db.Quiz_Score = require('../../_models/quiz_score.model')(sequelize)
   db.Final_Grade = require('../../_models/final_grade.model')(sequelize)
-  db.Assignment_Quarter_Lock = require('../../_models/assignment_quarter_lock.model')(sequelize)
+
 
   defineAssociations(db)
     

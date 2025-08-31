@@ -1,9 +1,13 @@
 const db = require("../_helpers/db");
 
 module.exports = {
-  create
+  create,
+  getSubjects
 }
 
+async function getSubjects() {
+  
+}
 
 async function create(params){
    // check subject
