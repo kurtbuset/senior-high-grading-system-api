@@ -28,8 +28,9 @@ async function authenticate({ username, password, ipAddress }) {
   // Try to find by email (for superadmin, admin, teacher)
   account = await db.Account.scope('withHash').findOne({ where: { email: username } });
 
+  // console.log(account)
   // If found and role is not a student
-  if (account && account.role !== 'student') {
+  if (account && account.role !== 'Student') {
     if (!(await bcrypt.compare(password, account.passwordHash)))
       throw 'Username or password is incorrect';
 

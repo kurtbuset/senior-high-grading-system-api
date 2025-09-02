@@ -8,9 +8,17 @@ const Type = require('./type')
 const Role = require('../_helpers/role')
 
 
+router.get('/', authorize(Role.Registrar), getAllSubjects)
 router.post('/', authorize(Role.SuperAdmin), createSchema, create)
 
 module.exports = router;
+
+function getAllSubjects(req, res, next){
+  subjectService
+    .getAllSubjects()
+    .then(subjects => res.json(subjects))
+    .catch(next)
+}
 
 function createSchema(req, res, next) {
   const schema = Joi.object({

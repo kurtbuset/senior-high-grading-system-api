@@ -21,6 +21,26 @@ module.exports = function defineAssociations(db) {
     foreignKey: "account_id",
   });
 
+  // Curriculum subject -> grade level
+  db.Curriculum_Subject.belongsTo(db.Grade_Level, {
+    foreignKey: "grade_level_id",
+    as: "grade_level",
+  });
+  db.Grade_Level.hasMany(db.Curriculum_Subject, {
+    foreignKey: "grade_level_id",
+    as: "curriculum_subjects",
+  });
+
+  // curriculum subject -> strand
+  db.Curriculum_Subject.belongsTo(db.Strand, {
+    foreignKey: "strand_id",
+    as: "strand",
+  });
+  db.Strand.hasMany(db.Curriculum_Subject, {
+    foreignKey: "strand_id",
+    as: "curriculum_subjects",
+  });
+
   // Enrollment → Final_Grade
   db.Enrollment.hasMany(db.Final_Grade, {
     foreignKey: "enrollment_id",
