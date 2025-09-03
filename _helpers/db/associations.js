@@ -21,6 +21,17 @@ module.exports = function defineAssociations(db) {
     foreignKey: "account_id",
   });
 
+  // Homeroom → Teacher (Account)
+  db.HomeRoom.belongsTo(db.Account, {
+    foreignKey: "teacher_id",
+    as: "teacher",
+  });
+  db.Account.hasMany(db.HomeRoom, {
+    foreignKey: "teacher_id",
+    as: "homerooms",
+  });
+
+
   // Curriculum subject -> grade level
   db.Curriculum_Subject.belongsTo(db.Grade_Level, {
     foreignKey: "grade_level_id",

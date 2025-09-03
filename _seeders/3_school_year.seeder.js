@@ -23,11 +23,17 @@ async function seed() {
 
     await SchoolYear.bulkCreate([
       {
+        school_year: '2024-2025',
+        is_active: false,
+        start_date: new Date('2024-06-01'),
+        end_date: new Date('2025-03-31')
+      },
+      {
         school_year: '2025-2026',
         is_active: true,
         start_date: new Date('2025-06-01'),
         end_date: new Date('2026-03-31')
-      }
+      },
     ]);
 
     console.log('✅ School Year seeded!');

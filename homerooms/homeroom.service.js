@@ -164,8 +164,18 @@ async function getOneHomeroom(homeroomId) {
   };
 }
 
-async function getHomerooms() {
+async function getHomerooms(role, accountId) {
+  const whereClause = {};
+
+  if (role === "Teacher") {
+    whereClause.teacher_id = accountId; // only their homerooms
+  }
+  // Registrar or Principal → no filter (all homerooms)
+  console.log(role)
+  console.log(whereClause)
+
   const homerooms = await db.HomeRoom.findAll({
+    where: whereClause,
     attributes: ["id", "section"],
     include: [
       {
@@ -185,15 +195,15 @@ async function getHomerooms() {
       },
     ],
     raw: true,
-    nest: true, // so grade_level and strand appear as nested objects
+    nest: true,
   });
 
-  // Reformat the result
   return homerooms.map((h) => ({
     id: h.id,
     grade_level: h.grade_level.level,
     section: h.section,
     strand: h.strand.name,
-    school_year: h.school_year.school_year
+    school_year: h.school_year.school_year,
   }));
 }
+

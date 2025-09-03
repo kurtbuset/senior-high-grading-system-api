@@ -28,36 +28,37 @@ async function seed() {
         grade_level_id: 1,
         section: "HUMMS A",
         strand_id: 2,
-        school_year_id: 1
+        school_year_id: 2,
+        teacher_id: 4
       },
       {
         grade_level_id: 1,
         section: "HUMMS B",
         strand_id: 2,
-        school_year_id: 1
+        school_year_id: 2,
+        teacher_id: 5
       },
       {
         grade_level_id: 2,
         section: "HUMMS C",
         strand_id: 2,
-        school_year_id: 1
+        school_year_id: 2,
+        teacher_id: 6
       },
       {
         grade_level_id: 2,
         section: "HUMMS D",
         strand_id: 2,
-        school_year_id: 1
+        school_year_id: 2,
+        teacher_id: 6
       },
-      // {
-      //   grade_level_id: 1,
-      //   section: "STEM A",
-      //   strand_id: 1
-      // },
-      //  {
-      //   grade_level_id: 1,
-      //   section: "STEM B",
-      //   strand_id: 1
-      // },
+      {
+        grade_level_id: 1,
+        section: "HUMMS 2024 2025",
+        strand_id: 2,
+        school_year_id: 1,
+        teacher_id: 4
+      },
       //  {
       //   grade_level_id: 2,
       //   section: "STEM C",

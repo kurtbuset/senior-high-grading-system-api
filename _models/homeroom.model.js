@@ -29,6 +29,14 @@ function model(sequelize) {
         key: "id",
       },
     },
+    teacher_id: {
+      type: DataTypes.INTEGER,  
+      allowNull: false,
+      references: {
+        model: "accounts", // must match the table name
+        key: "id",  
+      },
+    },
   };
 
   const options = {
