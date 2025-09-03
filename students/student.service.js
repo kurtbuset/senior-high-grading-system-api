@@ -109,6 +109,9 @@ async function getSubjectAndGrades(account_id) {
       let teacher = null;
       let isEnrolled = false;
       let enrollmentId = null;
+      let firstQuarter = null;
+      let secondQuarter = null;
+      let finalAverage = null;
 
       if (assignment) {
         const enrollment = await db.Enrollment.findOne({
@@ -125,6 +128,25 @@ async function getSubjectAndGrades(account_id) {
             firstName: assignment.account.firstName,
             lastName: assignment.account.lastName,
           };
+
+          // 🔑 Fetch final grades if locked
+          const grades = await db.Final_Grade.findAll({
+            where: { enrollment_id: enrollment.id },
+            attributes: ["quarter", "final_grade", "locked_at"],
+          });
+
+          for (const g of grades) {
+            if (g.quarter === "First Quarter" && g.locked_at) {
+              firstQuarter = g.final_grade;
+            }
+            if (g.quarter === "Second Quarter" && g.locked_at) {
+              secondQuarter = g.final_grade;
+            }
+          }
+
+          if (firstQuarter !== null && secondQuarter !== null) {
+            finalAverage = Math.round((firstQuarter + secondQuarter) / 2);
+          }
         }
       }
 
@@ -137,6 +159,9 @@ async function getSubjectAndGrades(account_id) {
         teacher,
         isEnrolled,
         enrollmentId,
+        firstQuarter,
+        secondQuarter,
+        finalAverage,
       };
     })
   );
@@ -144,6 +169,7 @@ async function getSubjectAndGrades(account_id) {
   console.log(JSON.stringify(results, null, 2));
   return results;
 }
+
 
 
 
@@ -155,6 +181,7 @@ async function create(params) {
     sex,
     homeroom_id,
     address,
+    lrn_number
   } = params;
 
   const homeroom = await db.HomeRoom.findByPk(params.homeroom_id);
@@ -191,6 +218,7 @@ async function create(params) {
     sex,
     homeroom_id,
     address,
+    lrn_number
   });
 
   return {

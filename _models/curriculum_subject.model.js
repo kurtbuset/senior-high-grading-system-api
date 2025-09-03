@@ -26,6 +26,11 @@ function model(sequelize){
     semester: {
       type: DataTypes.ENUM('FIRST SEMESTER', 'SECOND SEMESTER'),
       allowNull: false
+    },
+    school_year_id: { type: DataTypes.INTEGER, allowNull: false, references: {
+        model: 'school_years', // must match the table name
+        key: 'id'
+      } 
     }
   }
   

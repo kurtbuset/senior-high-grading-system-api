@@ -19,10 +19,6 @@ function model(sequelize){
         key: 'id'
       }
     },
-    school_year: {
-      type: DataTypes.ENUM('2024-2025', '2025-2026'),
-      allowNull: false
-    },
     homeroom_id: { type: DataTypes.INTEGER, allowNull: false, references: {
         model: 'homerooms', // must match the table name
         key: 'id'

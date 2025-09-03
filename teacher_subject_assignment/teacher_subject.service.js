@@ -40,7 +40,7 @@ function formatSubjectAssignment(x) {
     subjectName: x.curriculum_subject.subject.name,
     grade_level: x.homeroom?.grade_level?.level || null,
     section: x.homeroom?.section || null,
-    school_year: x.school_year,
+    school_year: x.curriculum_subject.school_year?.school_year || null,
     semester: x.curriculum_subject.semester,
     custom_ww_percent: x.custom_ww_percent,
     custom_pt_percent: x.custom_pt_percent,
@@ -58,10 +58,15 @@ async function getOneSubject(id) {
         as: "curriculum_subject",
         attributes: ["subject_id", "semester"],
         include: [
-          {
+          { 
             model: db.Subject,
             as: "subject", // must match your association alias
             attributes: ["name"],
+          },
+          {
+            model: db.School_Year,
+            as: "school_year",
+            attributes: ["school_year"], // 👈 fetch the school_year string
           },
         ],
       },
@@ -83,7 +88,6 @@ async function getOneSubject(id) {
   if (!subject) {
     throw `No subject assignment found with ID ${id}.`;
   }
-
   return formatSubjectAssignment(subject);
 }
 
@@ -100,6 +104,11 @@ async function getSubjectsByTeacherId(teacher_id) {
             model: db.Subject,
             as: "subject", // must match your association alias
             attributes: ["name"],
+          },
+          {
+            model: db.School_Year,
+            as: "school_year",
+            attributes: ["school_year"], // 👈 fetch the school_year string
           },
         ],
       },

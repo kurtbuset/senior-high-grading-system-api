@@ -6,10 +6,21 @@ const Joi = require("joi");
 const curriculumSubjectService = require('../curriculum_subjects/curriculum_subject.service')
 const validateRequest = require("../_middleware/validate-request");
 
-
+router.get('/filtered', authorize(Role.Registrar), getFilteredSubjects)
 router.post('/', authorize(Role.Registrar), createSchema, create)
 
 module.exports = router;
+
+
+
+function getFilteredSubjects(req, res, next){
+  const { grade_level, strand, semester, school_year } = req.query
+  console.log(req.query)
+  curriculumSubjectService
+    .getFilteredSubjects({ grade_level, strand, semester, school_year })
+    .then((filteredSubjects) => res.json(filteredSubjects))
+    .catch(next)  
+}
 
 
 function createSchema(req, res, next){
@@ -18,6 +29,7 @@ function createSchema(req, res, next){
     grade_level_id: Joi.number().required(),
     strand_id: Joi.number().required(),
     semester: Joi.string().valid('FIRST SEMESTER', 'SECOND SEMESTER').required(),
+    school_year_id: Joi.number().required()
   })
 
   validateRequest(req, next, schema)
