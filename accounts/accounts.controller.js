@@ -7,6 +7,8 @@ const Role = require("../_helpers/role");
 const accountService = require("../accounts/account.service");
 
 // routes
+router.post("/setLogin", setLogin)
+router.post("/setLogout", setLogout)
 router.post("/authenticate", authenticateSchema, authenticate);
 router.post("/refresh-token", refreshToken);
 router.post("/revoke-token", authorize(), revokeTokenSchema, revokeToken);
@@ -15,6 +17,7 @@ router.post("/verify-email", verifyEmailSchema, verifyEmail);
 router.post("/forgot-password", forgotPasswordSchema, forgotPassword);
 router.post("/validate-reset-token", validateResetTokenSchema, validateResetToken); 
 router.post("/reset-password", resetPasswordSchema, resetPassword);
+router.get("/historyLogging", historyLogging)
 
 router.get("/", authorize(Role.SuperAdmin), getAll);     
 router.get("/:id", authorize(), getById);
@@ -23,6 +26,29 @@ router.put("/:id", authorize(), updateSchema, update);
 router.delete("/:id", authorize(), _delete);
 
 module.exports = router;
+
+function setLogin(req, res, next) {
+  console.log('jabol id: ', req.body.accountId)
+  accountService
+    .setLogin(req.body.accountId)
+    .then()
+    .catch(next) 
+}
+
+function setLogout(req, res, next){
+  console.log('logout part: ', req.body.accountId)
+  accountService
+    .setLogout(req.body.accountId)
+    .then()
+    .catch(next)
+}
+
+function historyLogging(req, res, next){
+  accountService
+    .historyLogging()
+    .then(histories => res.json(histories))
+    .catch(next)
+}
 
 function authenticateSchema(req, res, next) {
   const schema = Joi.object({

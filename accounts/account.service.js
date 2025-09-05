@@ -20,7 +20,57 @@ module.exports = {
   create,
   update,
   delete: _delete,
+  setLogin,
+  setLogout,
+  historyLogging
 }
+
+async function setLogin(account_id){
+  return await db.Logging_History.create({
+    account_id,
+    login_date: new Date(),
+  });
+}
+
+async function setLogout(account_id){
+  const lastLogin = await db.Logging_History.findOne({
+    where: { account_id, logout_date: null },
+    order: [["login_date", "DESC"]],
+  });
+
+  if (lastLogin) {
+    lastLogin.logout_date = new Date();
+    await lastLogin.save();
+  }
+
+  return lastLogin;
+}
+
+async function historyLogging() {
+  return await db.Logging_History.findAll({
+    include: [
+      {
+        model: db.Account,
+         as: "account",
+        attributes: ['firstName', 'lastName', 'role']
+      }
+    ],
+    order: [['login_date', 'DESC']] // latest first
+  }).then(histories =>
+    histories.map(h => {
+      const account = h.account;
+      return {
+        firstName: account.firstName,
+        lastName: account.lastName,
+        role: account.role,
+        status: h.logout_date ? 'Logout' : 'Login',
+        login_date: h.login_date,
+        logout_date: h.logout_date
+      };
+    })
+  );
+}
+
 
 async function authenticate({ username, password, ipAddress }) {
   let account;

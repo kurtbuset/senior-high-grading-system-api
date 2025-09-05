@@ -12,6 +12,17 @@ module.exports = function defineAssociations(db) {
     foreignKey: "teacher_id",
   });
 
+    // One-to-Many: Account → Logging_History
+  db.Account.hasMany(db.Logging_History, {
+    foreignKey: "account_id",
+    as: "logging_history"
+  });
+  db.Logging_History.belongsTo(db.Account, {
+    foreignKey: "account_id",
+    as: "account"
+  });
+
+
   // One-to-One: Account ↔ Student
   db.Account.hasOne(db.Student, {
     foreignKey: "account_id",
