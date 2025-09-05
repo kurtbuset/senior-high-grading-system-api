@@ -264,9 +264,9 @@ function randomTokenString(){
 }
 
 function basicDetails(account){
-  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee } = account
+  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive } = account
   
-  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, employee }
+  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive }
 }
 
 

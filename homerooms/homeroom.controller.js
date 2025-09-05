@@ -33,8 +33,9 @@ function getOneHomeroom(req, res, next){
 }
   
 function getHomerooms(req, res, next){
+  const { role, accountId } = req.query;
   homeroomService
-    .getHomerooms()
+    .getHomerooms(role, accountId)
     .then((homerooms) => res.json(homerooms))
     .catch(next)
 }

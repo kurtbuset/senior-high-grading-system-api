@@ -9,7 +9,7 @@ module.exports = {
 };
 
 async function getSubjectAndGrades(account_id) {
-  // fetch student with homeroom, grade level, strand
+  // fetch student with homeroom, grade level, strand, school_year
   const student = await db.Student.findOne({
     where: { account_id },
     include: [
@@ -27,6 +27,11 @@ async function getSubjectAndGrades(account_id) {
             as: "strand",
             attributes: ["id", "code", "name"],
           },
+          {
+            model: db.School_Year,
+            as: "school_year",
+            attributes: ["id", "school_year"],
+          },
         ],
       },
     ],
@@ -39,12 +44,14 @@ async function getSubjectAndGrades(account_id) {
   const gradeLevelId = student.homeroom.grade_level.id;
   const strandId = student.homeroom.strand.id;
   const homeroomId = student.homeroom.id;
+  const schoolYearId = student.homeroom.school_year.id;
 
-  // fetch all curriculum subjects for this grade + strand
+  // fetch all curriculum subjects for this grade + strand + school year
   const curriculumSubjects = await db.Curriculum_Subject.findAll({
     where: {
       grade_level_id: gradeLevelId,
       strand_id: strandId,
+      school_year_id: schoolYearId,
     },
     include: [
       {
@@ -166,9 +173,13 @@ async function getSubjectAndGrades(account_id) {
     })
   );
 
-  console.log(JSON.stringify(results, null, 2));
-  return results;
+  // ✅ Return school year together with results
+  return {
+    schoolYear: student.homeroom.school_year.school_year,
+    subjects: results,
+  };
 }
+
 
 
 
