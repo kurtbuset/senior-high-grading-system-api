@@ -17,6 +17,7 @@ module.exports = {
   validateResetToken,
   resetPassword,
   getAll,
+  registerDirect, //testing 123
   getById,
   create,
   update,
@@ -368,4 +369,29 @@ async function sendPasswordResetEmail(account, origin) {
     html: `<h4>Reset Password email</h4>
           ${message}`
   })
+}
+
+//testing 123
+async function registerDirect(params) {
+  // check if email already exists
+  if (await db.Account.findOne({ where: { email: params.email } })) {
+    throw `Email '${params.email}' is already registered`;
+  }
+
+  // first account becomes SuperAdmin, else use provided role or default "User"
+  const isFirstAccount = (await db.Account.count()) === 0;
+
+  const account = new db.Account({
+    email: params.email,
+    passwordHash: await hash(params.password),
+    firstName: params.firstName,
+    lastName: params.lastName,
+    role: isFirstAccount ? Role.SuperAdmin : params.role || "User",
+    isActive: true,
+    verified: Date.now() // instantly verified
+  });
+
+  await account.save();
+
+  return basicDetails(account);
 }
