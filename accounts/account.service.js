@@ -206,20 +206,24 @@ async function create(params) {
 
 
 async function update(id, params) {
-  const account = await getAccount(id)
+  const account = await getAccount(id);
 
-  if(params.email && account.email !== params.email && await db.Account.findOne({ where: { email: params.email}}))
-
-  if(params.password){
-    params.passwordHash = await hash(params.password)
+  // if password was provided, hash it
+  if (params.password) {
+    params.passwordHash = await hash(params.password);
   }
 
-  Object.assign(account, params)
-  account.updated = Date.now()
-  await account.save()
+  // 🚨 Remove non-DB fields
+  delete params.password;
+  delete params.confirmPassword;
 
-  return basicDetails(account)
+  Object.assign(account, params);
+  account.updated = Date.now();
+  await account.save();
+
+  return basicDetails(account);
 }
+
 
 async function _delete(id) {
   const account = await getAccount(id)

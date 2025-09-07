@@ -6,7 +6,43 @@ const Role = require("../_helpers/role");
 module.exports = {
   create,
   getSubjectAndGrades,
+  getStudentInfo
 };
+
+async function getStudentInfo(accountId) {
+  try {
+    const student = await db.Student.findOne({
+      where: { account_id: accountId },
+      attributes: ["school_id", "address", "lrn_number"], // student info
+      include: [
+        {
+          model: db.HomeRoom,
+          as: "homeroom",
+          attributes: ["section"], // homeroom section
+          include: [
+            {
+              model: db.Grade_Level,
+              as: "grade_level",
+              attributes: ["level"], // grade level
+            },
+            {
+              model: db.Strand,
+              as: "strand",
+              attributes: ["name"], // strand name
+            },
+          ],
+        },
+      ],
+    });
+
+    return student;
+  } catch (error) {
+    console.error("Error fetching student info:", error);
+    throw error;
+  }
+}
+
+
 
 async function getSubjectAndGrades(account_id) {
   // fetch student with homeroom, grade level, strand, school_year

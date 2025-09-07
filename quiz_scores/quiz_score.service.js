@@ -29,24 +29,25 @@ async function getStudentsWithScores(quiz_id) {
     ],
   });
 
-  // Format the data
-  const students = results.map((score) => ({
-    enrollment_id: score.enrollment_id,
-    raw_score: score.raw_score,
-    firstName: score.enrollment.student.account.firstName,
-    lastName: score.enrollment.student.account.lastName,
-  }));
+  // Format and sort the data
+  const students = results
+    .map((score) => ({
+      enrollment_id: score.enrollment_id,
+      raw_score: score.raw_score,
+      firstName: score.enrollment.student.account.firstName,
+      lastName: score.enrollment.student.account.lastName,
+    }))
+    .sort((a, b) => a.lastName.localeCompare(b.lastName)); // Sort by lastName A-Z
 
   console.log(JSON.stringify(students, null, 2));
   return students;
 }
 
 
+
 async function getStudentsWithoutScores({ teacher_subject_id, quiz_id }) {
   console.log({ teacher_subject_id, quiz_id }); // For debugging
 
-  // Fetch all enrollments for the given teacher_subject_id where the student is enrolled,
-  // including student details and any matching quiz score record for the given quiz.
   const enrollments = await db.Enrollment.findAll({
     where: {
       teacher_subject_id,
@@ -71,19 +72,19 @@ async function getStudentsWithoutScores({ teacher_subject_id, quiz_id }) {
     ],
   });
 
-  // Filter out enrollments that have a quiz score (i.e. quizScore record present)
+  // Filter out students that already have a quiz score and sort by lastName
   const studentsWithoutScores = enrollments
-    .filter((enrollment) => {
-      return enrollment.quiz_scores.length === 0;
-    })
+    .filter((enrollment) => enrollment.quiz_scores.length === 0)
     .map((enrollment) => ({
       enrollment_id: enrollment.id,
       firstName: enrollment.student.account.firstName,
       lastName: enrollment.student.account.lastName,
-    }));
+    }))
+    .sort((a, b) => a.lastName.localeCompare(b.lastName)); // A-Z sort
 
   return studentsWithoutScores;
 }
+
 
 async function addRawScore(params) {
   console.log(params);

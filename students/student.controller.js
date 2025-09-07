@@ -7,12 +7,20 @@ const validateRequest = require("../_middleware/validate-request");
 const studentService = require('./student.service')
 
 
+router.get('/:id', authorize(), getStudentInfo)
 router.get('/egrades/:id', authorize(), getSubjectAndGrades)
 router.post('/', authorize(Role.Registrar), createSchema, create)
 
 
 module.exports = router
 
+
+function getStudentInfo(req, res, next){
+  studentService
+    .getStudentInfo(req.params.id)
+    .then((student) => res.json(student))
+    .catch(next)
+}
 
 function getSubjectAndGrades(req, res, next){
   studentService

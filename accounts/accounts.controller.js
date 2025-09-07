@@ -211,24 +211,16 @@ function create(req, res, next) {
 
 function updateSchema(req, res, next) {
   const schemaRules = {
-    title: Joi.string().empty(""),
-    firstName: Joi.string().empty(""),
-    lastName: Joi.string().empty(""),
-    email: Joi.string().email().empty(""),
     password: Joi.string().min(6).empty(""),
     confirmPassword: Joi.string().valid(Joi.ref("password")).empty(""),
   };
 
-  if (req.user.role === Role.Admin) {
-    schemaRules.role = Joi.string().valid(Role.Admin, Role.Teacher).empty("");
-    schemaRules.isActive = Joi.boolean();
-  }
 
   const schema = Joi.object(schemaRules).with("password", "confirmPassword");
   validateRequest(req, next, schema);
 }
 
-function update(req, res, next) {
+function update(req, res, next) { 
   if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
     return res.status(401).json({ msg: "Unauthorized" });
   }
