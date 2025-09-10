@@ -34,8 +34,9 @@ app.use('/curriculum-subjects', require('./curriculum_subjects/curriculum_subjec
 
 app.use('/homerooms', require('./homerooms/homeroom.controller'))
 
-  
 app.use('/final-grades', require('./final_grades/final-grade.controller'))
+
+app.use('/subject-quarter-locks', require('./subject_quarter_locks/subject_quarter_lock.controller'))
 
 app.use('/api-docs', require('./_helpers/swagger'))
   

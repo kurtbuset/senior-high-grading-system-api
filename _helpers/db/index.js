@@ -59,6 +59,7 @@ async function initialize() {
   db.Quiz = require("../../_models/quiz.model")(sequelize);
   db.Quiz_Score = require('../../_models/quiz_score.model')(sequelize)
   db.Final_Grade = require('../../_models/final_grade.model')(sequelize)
+  db.Subject_Quarter_Lock = require('../../_models/subject_quarter_lock')(sequelize)
 
 
   defineAssociations(db)

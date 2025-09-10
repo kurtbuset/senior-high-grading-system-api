@@ -6,9 +6,18 @@ const Role = require("../_helpers/role");
 const validateRequest = require("../_middleware/validate-request");
 const finalGradeService = require("./final-grade.service");
 
+router.get("/:id", authorize(), getSubjectsLockingHistory)
 router.post("/", authorize(), createSchema, create);
 
 module.exports = router;
+
+
+function getSubjectsLockingHistory(req, res, next){
+  finalGradeService
+    .getSubjectsLockingHistory(req.params.id)
+    .then(results => res.json(results))
+    .catch(next)
+}
 
 function createSchema(req, res, next) {
   const schema = Joi.array().items(

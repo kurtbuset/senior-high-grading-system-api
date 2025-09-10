@@ -231,52 +231,72 @@ async function create(params) {
     lrn_number
   } = params;
 
-  const homeroom = await db.HomeRoom.findByPk(params.homeroom_id);
+  // 1. Validate homeroom
+  const homeroom = await db.HomeRoom.findByPk(homeroom_id);
   if (!homeroom) {
-    throw `Homeroom with id ${params.homeroom_id} not found`;
+    throw `Homeroom with id ${homeroom_id} not found`;
   }
 
+  // 2. Validate email
   const existing = await db.Account.findOne({ where: { email } });
   if (existing) {
     throw `An account with the email "${email}" already exists.`;
   }
 
+  // 3. Generate school_id and password
   const school_id = await generateSchoolId();
-
   const plainPassword = school_id;
   const passwordHash = await bcrypt.hash(plainPassword, 10);
 
-  // 2. Create the account
+  // 4. Create Account
   const account = await db.Account.create({
     firstName,
     lastName,
     email,
-    passwordHash, 
+    passwordHash,
     role: Role.Student,
     isActive: true,
     verified: Date.now(),
     created: Date.now(),
   });
 
-  // 4. Create the student record and link to account
+  // 5. Create Student
   const student = await db.Student.create({
     account_id: account.id,
     school_id,
     sex,
     homeroom_id,
     address,
-    lrn_number
+    lrn_number,
   });
 
+  // 6. Find all subject assignments for this homeroom
+  const assignments = await db.Teacher_Subject_Assignment.findAll({
+    where: { homeroom_id },
+  });
+
+  // 7. Enroll student in each assignment
+  const enrollments = [];
+  for (const assignment of assignments) {
+    const enrollment = await db.Enrollment.create({
+      student_id: student.id,
+      teacher_subject_id: assignment.id,
+      is_enrolled: false, // add this if you have a flag column
+    });
+    enrollments.push(enrollment);
+  }
+
   return {
-    message: "Student and account successfully created.",
+    message: "Student, account, and enrollments successfully created.",
     student,
     account: {
       username: student.school_id,
-      password: plainPassword, // Send this to admin for the student
+      password: plainPassword, // share with admin
     },
+    enrollments,
   };
 }
+
 
 // helper function
 async function generateSchoolId() {

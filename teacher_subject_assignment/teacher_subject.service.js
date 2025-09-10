@@ -132,22 +132,27 @@ async function getSubjectsByTeacherId(teacher_id) {
   return assignments.map(a => formatSubjectAssignment(a));
 }
 
+
 async function create(params) {
+  // 1. Validate teacher
   const teacher = await db.Account.findByPk(params.teacher_id);
   if (!teacher || teacher.role !== "Teacher") {
     throw `Account with ID ${params.teacher_id} is not a teacher.`;
   }
 
+  // 2. Validate homeroom
   const homeroom = await db.HomeRoom.findByPk(params.homeroom_id);
   if (!homeroom) {
-    throw `section with id ${params.homeroom_id} not found`;
+    throw `Section with id ${params.homeroom_id} not found`;
   }
 
+  // 3. Validate curriculum subject
   const curriculumSubject = await db.Curriculum_Subject.findByPk(params.curriculum_subject_id);
   if (!curriculumSubject) {
-    throw `curriculumSubject with id ${params.curriculum_subject_id} not found`;
+    throw `CurriculumSubject with id ${params.curriculum_subject_id} not found`;
   }
 
+  // 4. Check for duplicate assignment
   const existing = await db.Teacher_Subject_Assignment.findOne({
     where: {
       curriculum_subject_id: params.curriculum_subject_id,
@@ -159,11 +164,15 @@ async function create(params) {
     throw `This subject is already assigned to the homeroom (id: ${params.homeroom_id}).`;
   }
 
-  // throw error if grade_level or strand are mismatched
-  if(homeroom.grade_level_id !== curriculumSubject.grade_level_id || homeroom.strand_id !== curriculumSubject.strand_id){
-    throw `Grade level mismatch!`
+  // 5. Throw error if grade_level or strand are mismatched
+  if (
+    homeroom.grade_level_id !== curriculumSubject.grade_level_id ||
+    homeroom.strand_id !== curriculumSubject.strand_id
+  ) {
+    throw `Grade level mismatch!`;
   }
 
+  // 6. Validate percentages
   const total =
     params.custom_ww_percent +
     params.custom_pt_percent +
@@ -172,11 +181,30 @@ async function create(params) {
     throw `The sum of WW, PT, and QA percentages must not exceed 100.`;
   }
 
-
+  // 7. Create the teacher subject assignment
   const teacherSubject = await db.Teacher_Subject_Assignment.create(params);
 
-  // return teacherSubject
-  return basicDetails(teacherSubject);
+  // 8. Find all students in that homeroom
+  const students = await db.Student.findAll({
+    where: { homeroom_id: params.homeroom_id },
+  });
+
+  // 9. Auto-enroll each student into enrollments
+  const enrollments = [];
+  for (const student of students) {
+    const enrollment = await db.Enrollment.create({
+      student_id: student.id,
+      teacher_subject_id: teacherSubject.id,
+      is_enrolled: false, // ✅ add if you track enrollment status
+    });
+    enrollments.push(enrollment);
+  }
+
+  // 10. Return summary
+  return {
+    teacherSubject: basicDetails(teacherSubject),
+    enrolled_students: enrollments.length,
+  };
 }
 
 function basicDetails(teacherSubject) {
@@ -188,7 +216,7 @@ function basicDetails(teacherSubject) {
     custom_ww_percent,
     custom_pt_percent,
     custom_qa_percent,
-    school_year
+    school_year,
   } = teacherSubject;
 
   return {
@@ -202,3 +230,4 @@ function basicDetails(teacherSubject) {
     custom_qa_percent,
   };
 }
+

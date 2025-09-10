@@ -40,7 +40,7 @@ async function updateQuiz(id, params) {
 }
 
 async function getQuizzes(teacher_subject_id, param) {
-  console.log(param);
+  // 1️⃣ Fetch quizzes
   const quizzes = await db.Quiz.findAll({
     where: {
       teacher_subject_id,
@@ -50,8 +50,18 @@ async function getQuizzes(teacher_subject_id, param) {
     attributes: ["id", "description", "hps", "createdAt"],
   });
 
-  const isLockedFlag = await isLocked(teacher_subject_id, param.quarter);
+  // 2️⃣ Check lock status
+  const lockRecord = await db.Subject_Quarter_Lock.findOne({
+    where: {
+      teacher_subject_id,
+      quarter: param.quarter,
+      status: "LOCKED",
+    },
+  });
 
+  const isLocked = !!lockRecord; // true if found
+
+  // 3️⃣ Format quizzes
   const formattedQuizzes = quizzes.map((q) => {
     const quiz = q.toJSON();
     quiz.createdAt = new Date(quiz.createdAt).toLocaleDateString("en-US", {
@@ -62,30 +72,10 @@ async function getQuizzes(teacher_subject_id, param) {
     return quiz;
   });
 
-  return { quizzes: formattedQuizzes, isLocked: isLockedFlag };
+  // 4️⃣ Return quizzes + locked flag
+  return { quizzes: formattedQuizzes, isLocked };
 }
 
-// helper function
-async function isLocked(teacher_subject_id, quarter) {
-  // count enrolled students
-  const enrollmentCount = await db.Enrollment.count({
-    where: { teacher_subject_id },
-  });
-
-  // count how many of those have final grades for this quarter
-  const finalGradeCount = await db.Final_Grade.count({
-    include: [
-      {
-        model: db.Enrollment,
-        as: "enrollment",
-        where: { teacher_subject_id },
-      },
-    ],
-    where: { quarter },
-  });
-
-  return enrollmentCount > 0 && enrollmentCount === finalGradeCount;
-}
 
 function transmuteGrade(actual) {
   const grade = parseFloat(actual);
@@ -194,12 +184,6 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
 
       const transmutedGrade = transmuteGrade(initialGrade);
 
-      // find all students in this subject teacher if it has a record in final_grades table
-      const finalGrade = await db.Final_Grade.findOne({
-        where: { enrollment_id: enrollment.id, quarter },
-        attributes: ["final_grade", "locked_at"],
-      });
-
       return {
         enrollment_id: enrollment.id,
         firstName: enrollment.student.account.firstName,
@@ -212,26 +196,36 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
         qaWeightedScore: qa.weighted,
         initialGrade,
         transmutedGrade,
-        locked: !!finalGrade, // 🔑 flag
-        locked_grade: finalGrade?.final_grade ?? null,
-        locked_at: finalGrade?.locked_at ?? null,
       };
     })
   );
-  console.log(JSON.stringify(result, null, 2));
 
+  // sort results
   result.sort((a, b) => {
     if (a.lastName !== b.lastName) {
       return a.lastName.localeCompare(b.lastName);
     }
     return a.firstName.localeCompare(b.firstName);
   });
-  return result;
+
+  // 🔒 check lock status
+  const lockRecord = await db.Subject_Quarter_Lock.findOne({
+    where: { teacher_subject_id, quarter },
+  });
+
+  const isLocked = lockRecord?.status === "LOCKED";
+
+  // ⚡ keep return value compatible with getSemestralFinalGrade
+  return {
+    students: result,
+    isLocked,
+  };
 }
+
 
 // O (1) - fastest - using Map
 async function getSemestralFinalGrade(teacher_subject_id) {
-  const [students, firstQuarterGrades, secondQuarterGrades] = await Promise.all(
+  const [students, { students: firstQuarterGrades }, { students: secondQuarterGrades }] = await Promise.all(
     [
       db.Enrollment.findAll({
         where: { teacher_subject_id, is_enrolled: true },
@@ -309,8 +303,6 @@ semestralGrades.sort((a, b) => {
 });
 
 return semestralGrades;
-
-  
 }
 
 const transmutationTable = [

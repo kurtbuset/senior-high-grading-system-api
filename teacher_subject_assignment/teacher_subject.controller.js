@@ -65,7 +65,7 @@ function createSchema(req, res, next){
 }
 
 function create(req, res, next){  
-  teacherSubjectService
+  teacherSubjectService 
     .create(req.body)
     .then((teacherSubject) => res.json(teacherSubject))
     .catch(next)
