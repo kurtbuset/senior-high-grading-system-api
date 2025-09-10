@@ -9,8 +9,13 @@ const homeroomService = require('./homeroom.service')
 router.get('/', authorize(), getHomerooms)
 router.get('/:id', authorize(), getOneHomeroom)
 router.get('/conso/:id', authorize(), getConsolidatedSheet)
+router.get('/locking-history/:id', authorize(), getSubjectsHistory)
 
 module.exports = router
+
+function getSubjectsHistory(req, res, next){
+    
+}
 
 function getConsolidatedSheet(req, res, next){
   const { semester } = req.query
@@ -26,10 +31,11 @@ function getOneHomeroom(req, res, next){
     .then((homeroom) => res.json(homeroom))
     .catch(next)
 }
-
+  
 function getHomerooms(req, res, next){
+  const { role, accountId } = req.query;
   homeroomService
-    .getHomerooms()
+    .getHomerooms(role, accountId)
     .then((homerooms) => res.json(homerooms))
     .catch(next)
 }

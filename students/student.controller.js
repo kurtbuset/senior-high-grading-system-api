@@ -19,7 +19,7 @@ function getSubjectAndGrades(req, res, next){
     .getSubjectAndGrades(req.params.id)
     .then((student) => res.json(student))
     .catch(next)
-}
+} 
 
 function createSchema(req, res, next){
   const schema = Joi.object({
@@ -28,6 +28,7 @@ function createSchema(req, res, next){
     sex: Joi.string().valid('M', 'F').required(),
     email: Joi.string().email().required(),
     homeroom_id: Joi.number().required(),
+    lrn_number: Joi.string().max(12).required(),
     address: Joi.string().optional()
   })
 

@@ -9,7 +9,7 @@ module.exports = {
 };
 
 async function getSubjectAndGrades(account_id) {
-  // fetch student with homeroom, grade level, strand
+  // fetch student with homeroom, grade level, strand, school_year
   const student = await db.Student.findOne({
     where: { account_id },
     include: [
@@ -27,6 +27,11 @@ async function getSubjectAndGrades(account_id) {
             as: "strand",
             attributes: ["id", "code", "name"],
           },
+          {
+            model: db.School_Year,
+            as: "school_year",
+            attributes: ["id", "school_year"],
+          },
         ],
       },
     ],
@@ -39,12 +44,14 @@ async function getSubjectAndGrades(account_id) {
   const gradeLevelId = student.homeroom.grade_level.id;
   const strandId = student.homeroom.strand.id;
   const homeroomId = student.homeroom.id;
+  const schoolYearId = student.homeroom.school_year.id;
 
-  // fetch all curriculum subjects for this grade + strand
+  // fetch all curriculum subjects for this grade + strand + school year
   const curriculumSubjects = await db.Curriculum_Subject.findAll({
     where: {
       grade_level_id: gradeLevelId,
       strand_id: strandId,
+      school_year_id: schoolYearId,
     },
     include: [
       {
@@ -109,6 +116,9 @@ async function getSubjectAndGrades(account_id) {
       let teacher = null;
       let isEnrolled = false;
       let enrollmentId = null;
+      let firstQuarter = null;
+      let secondQuarter = null;
+      let finalAverage = null;
 
       if (assignment) {
         const enrollment = await db.Enrollment.findOne({
@@ -125,6 +135,25 @@ async function getSubjectAndGrades(account_id) {
             firstName: assignment.account.firstName,
             lastName: assignment.account.lastName,
           };
+
+          // 🔑 Fetch final grades if locked
+          const grades = await db.Final_Grade.findAll({
+            where: { enrollment_id: enrollment.id },
+            attributes: ["quarter", "final_grade", "locked_at"],
+          });
+
+          for (const g of grades) {
+            if (g.quarter === "First Quarter" && g.locked_at) {
+              firstQuarter = g.final_grade;
+            }
+            if (g.quarter === "Second Quarter" && g.locked_at) {
+              secondQuarter = g.final_grade;
+            }
+          }
+
+          if (firstQuarter !== null && secondQuarter !== null) {
+            finalAverage = Math.round((firstQuarter + secondQuarter) / 2);
+          }
         }
       }
 
@@ -137,13 +166,21 @@ async function getSubjectAndGrades(account_id) {
         teacher,
         isEnrolled,
         enrollmentId,
+        firstQuarter,
+        secondQuarter,
+        finalAverage,
       };
     })
   );
 
-  console.log(JSON.stringify(results, null, 2));
-  return results;
+  // ✅ Return school year together with results
+  return {
+    schoolYear: student.homeroom.school_year.school_year,
+    subjects: results,
+  };
 }
+
+
 
 
 
@@ -155,6 +192,7 @@ async function create(params) {
     sex,
     homeroom_id,
     address,
+    lrn_number
   } = params;
 
   const homeroom = await db.HomeRoom.findByPk(params.homeroom_id);
@@ -191,6 +229,7 @@ async function create(params) {
     sex,
     homeroom_id,
     address,
+    lrn_number
   });
 
   return {

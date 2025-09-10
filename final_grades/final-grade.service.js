@@ -12,4 +12,7 @@ module.exports = {
 
 async function create(params) {
   console.log(params)
+  const inserted = await db.Final_Grade.bulkCreate(params, { returning: true });
+
+  return inserted;
 }

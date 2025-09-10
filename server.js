@@ -10,7 +10,7 @@ const { superAdminSeed } = require('./_seeders/super-admin-seeder')
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true}))
-app.use(cookieParser()) 
+app.use(cookieParser())   
   
 // production mode  
 app.use(cors({ origin:  process.env.FRONTEND_URL, credentials: true }))
@@ -39,7 +39,7 @@ app.use('/final-grades', require('./final_grades/final-grade.controller'))
 
 app.use('/api-docs', require('./_helpers/swagger'))
   
-// global error handler
+// global error handler 
 app.use(errorHandler) 
   
 const port = process.env.NODE_ENV === 'production' ? (process.env.DB_PORT || 80) : 4000

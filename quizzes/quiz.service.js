@@ -40,7 +40,7 @@ async function updateQuiz(id, params) {
 }
 
 async function getQuizzes(teacher_subject_id, param) {
-  console.log(param)
+  console.log(param);
   const quizzes = await db.Quiz.findAll({
     where: {
       teacher_subject_id,
@@ -50,18 +50,41 @@ async function getQuizzes(teacher_subject_id, param) {
     attributes: ["id", "description", "hps", "createdAt"],
   });
 
-  return quizzes.map((q) => {
-    const quiz = q.toJSON();
+  const isLockedFlag = await isLocked(teacher_subject_id, param.quarter);
 
-    // Format createdAt to "January 1, 2025"
+  const formattedQuizzes = quizzes.map((q) => {
+    const quiz = q.toJSON();
     quiz.createdAt = new Date(quiz.createdAt).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-
     return quiz;
   });
+
+  return { quizzes: formattedQuizzes, isLocked: isLockedFlag };
+}
+
+// helper function
+async function isLocked(teacher_subject_id, quarter) {
+  // count enrolled students
+  const enrollmentCount = await db.Enrollment.count({
+    where: { teacher_subject_id },
+  });
+
+  // count how many of those have final grades for this quarter
+  const finalGradeCount = await db.Final_Grade.count({
+    include: [
+      {
+        model: db.Enrollment,
+        as: "enrollment",
+        where: { teacher_subject_id },
+      },
+    ],
+    where: { quarter },
+  });
+
+  return enrollmentCount > 0 && enrollmentCount === finalGradeCount;
 }
 
 function transmuteGrade(actual) {
@@ -74,7 +97,6 @@ function transmuteGrade(actual) {
 }
 
 async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
-
   // fetch weight percentages
   const { custom_ww_percent, custom_pt_percent, custom_qa_percent } =
     await db.Teacher_Subject_Assignment.findOne({
@@ -85,7 +107,6 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
         "custom_qa_percent",
       ],
     });
-
 
   const weightMap = {
     "Written Work": custom_ww_percent / 100,
@@ -122,7 +143,6 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
   const quizIdsMap = Object.fromEntries(
     quizTypes.map((type, i) => [type, quizIdsArray[i]])
   );
-
 
   // fetch students
   const students = await db.Enrollment.findAll({
@@ -174,6 +194,12 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
 
       const transmutedGrade = transmuteGrade(initialGrade);
 
+      // find all students in this subject teacher if it has a record in final_grades table
+      const finalGrade = await db.Final_Grade.findOne({
+        where: { enrollment_id: enrollment.id, quarter },
+        attributes: ["final_grade", "locked_at"],
+      });
+
       return {
         enrollment_id: enrollment.id,
         firstName: enrollment.student.account.firstName,
@@ -186,10 +212,20 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
         qaWeightedScore: qa.weighted,
         initialGrade,
         transmutedGrade,
+        locked: !!finalGrade, // 🔑 flag
+        locked_grade: finalGrade?.final_grade ?? null,
+        locked_at: finalGrade?.locked_at ?? null,
       };
     })
   );
   console.log(JSON.stringify(result, null, 2));
+
+  result.sort((a, b) => {
+    if (a.lastName !== b.lastName) {
+      return a.lastName.localeCompare(b.lastName);
+    }
+    return a.firstName.localeCompare(b.firstName);
+  });
   return result;
 }
 
@@ -230,41 +266,51 @@ async function getSemestralFinalGrade(teacher_subject_id) {
       parseFloat(g.transmutedGrade),
     ])
   );
+const semestralGrades = students.map(({ id, student }) => {
+  const first = firstQuarterMap.get(id);
+  const second = secondQuarterMap.get(id);
 
-  return students.map(({ id, student }) => {
-    const first = firstQuarterMap.get(id);
-    const second = secondQuarterMap.get(id);
+  const bothHaveGrades = first != null && second != null;
+  const average = bothHaveGrades ? Math.round((first + second) / 2) : "";
 
-    const bothHaveGrades = first != null && second != null;
-    const average = bothHaveGrades ? Math.round((first + second) / 2) : "";
+  let remarks = "", description = "";
+  if (bothHaveGrades) {
+    remarks = average >= 75 ? "PASSED" : "FAILED";
+    description =
+      average >= 90
+        ? "Outstanding"
+        : average >= 85
+        ? "Very Satisfactory"
+        : average >= 80
+        ? "Satisfactory"
+        : average >= 75
+        ? "Fairly Satisfactory"
+        : "Did Not Meet Expectations";
+  }
 
-    let remarks = "",
-      description = "";
-    if (bothHaveGrades) {
-      remarks = average >= 75 ? "PASSED" : "FAILED";
-      description =
-        average >= 90
-          ? "Outstanding"
-          : average >= 85
-          ? "Very Satisfactory"
-          : average >= 80
-          ? "Satisfactory"
-          : average >= 75
-          ? "Fairly Satisfactory"
-          : "Did Not Meet Expectations";
-    }
+  return {
+    enrollment_id: id,
+    firstName: student.account.firstName,
+    lastName: student.account.lastName,
+    firstQuarter: first ?? "",
+    secondQuarter: second ?? "",
+    average,
+    remarks,
+    description,
+  };
+});
 
-    return {
-      enrollment_id: id,
-      firstName: student.account.firstName,
-      lastName: student.account.lastName,
-      firstQuarter: first ?? "",
-      secondQuarter: second ?? "",
-      average,
-      remarks,
-      description,
-    };
-  });
+// 🔑 sort before returning
+semestralGrades.sort((a, b) => {
+  if (a.lastName !== b.lastName) {
+    return a.lastName.localeCompare(b.lastName);
+  }
+  return a.firstName.localeCompare(b.firstName);
+});
+
+return semestralGrades;
+
+  
 }
 
 const transmutationTable = [

@@ -10,12 +10,14 @@ router.post("/", authorize(), createSchema, create);
 
 module.exports = router;
 
-function createSchema(req, rex, next) {
-  const schema = Joi.object({
-    enrollment_id: Joi.number().required(),
-    final_grade: Joi.number().required(),
-    quarter: Joi.string().valid('First Quarter', 'Second Quarter').required()
-  });
+function createSchema(req, res, next) {
+  const schema = Joi.array().items(
+    Joi.object({
+      enrollment_id: Joi.number().required(),
+      final_grade: Joi.number().required(),
+      quarter: Joi.string().valid("First Quarter", "Second Quarter").required(),
+    })
+  );
 
   validateRequest(req, next, schema);
 }
@@ -23,9 +25,6 @@ function createSchema(req, rex, next) {
 function create(req, res, next) {
   finalGradeService
     .create(req.body)
-     .then((finalGrades => {
-      res.json(finalGrades)
-    }))
-    .catch(next)
+    .then((finalGrades) => res.json(finalGrades))
+    .catch(next);
 }
-  
