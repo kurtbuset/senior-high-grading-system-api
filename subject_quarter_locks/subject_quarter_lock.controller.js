@@ -6,11 +6,29 @@ const Role = require("../_helpers/role");
 const validateRequest = require("../_middleware/validate-request");
 const subjectQuarterLockService = require("./subject_quarter_lock.service");
 
-router.post("/", authorize(), lockSubjectSchema, lockSubject);
+router.post("/", authorize(Role.Teacher), lockSubjectSchema, lockSubject);
+router.put("/:id", authorize(Role.Registrar), updateSubjectStatus)
+router.put("/request/:id", authorize(Role.Teacher), requestToUnlock)
 
 module.exports = router;
 
-function lockSubjectSchema(req, res, next) {
+function updateSubjectStatus(req, res, next){
+  subjectQuarterLockService
+    .updateSubjectStatus(req.params.id, req.body)
+    .then(_ => res.json({ msg: "record updated successfully"}))
+    .catch(next)
+}
+
+
+function requestToUnlock(req, res, next){
+  subjectQuarterLockService
+    .requestToUnlock(req.params.id, req.body)
+    .then(_ => res.json({ msg: "record updated successfully"}))
+    .catch(next)  
+}
+
+
+function lockSubjectSchema(req, res, next) {  
 const schema = Joi.object({
     teacher_subject_id: Joi.number().required(),
     quarter: Joi.string().valid("First Quarter", "Second Quarter").required(),

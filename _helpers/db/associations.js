@@ -31,7 +31,6 @@ module.exports = function defineAssociations(db) {
     as: "homerooms",
   });
 
-
   // Curriculum subject -> grade level
   db.Curriculum_Subject.belongsTo(db.Grade_Level, {
     foreignKey: "grade_level_id",
@@ -87,6 +86,17 @@ module.exports = function defineAssociations(db) {
   db.HomeRoom.hasMany(db.Teacher_Subject_Assignment, {
     foreignKey: "homeroom_id",
     as: "assignments",
+  });
+
+  // Teacher_Subject_Assignment ↔ Subject_Quarter_Lock
+  db.Teacher_Subject_Assignment.hasMany(db.Subject_Quarter_Lock, {
+    foreignKey: "teacher_subject_id",
+    as: "quarter_locks",
+  });
+
+  db.Subject_Quarter_Lock.belongsTo(db.Teacher_Subject_Assignment, {
+    foreignKey: "teacher_subject_id",
+    as: "assignment",
   });
 
   // Curriculum_Subject → School_Year

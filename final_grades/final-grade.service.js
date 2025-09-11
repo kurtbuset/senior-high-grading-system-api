@@ -30,7 +30,12 @@ async function getSubjectsLockingHistory(homeroomId) {
                 as: "curriculum_subject",
                 include: [{ model: db.Subject, as: "subject" }],
               },
-              { model: db.Account, as: "account" }, // teacher info
+              { model: db.Account, as: "account" },
+              {
+                model: db.Subject_Quarter_Lock,
+                as: "quarter_locks",
+                required: false,
+              },
             ],
           },
           {
@@ -59,11 +64,19 @@ async function getSubjectsLockingHistory(homeroomId) {
     ].join("|");
 
     if (!subjectMap.has(subjectKey)) {
+      // find matching quarter lock
+      const lockRecord = assignment.quarter_locks?.find(
+        (l) => l.quarter === grade.quarter
+      );
+
       subjectMap.set(subjectKey, {
+        assignment_id: assignment.id,
         subject_name: assignment.curriculum_subject?.subject?.name,
         semester: assignment.curriculum_subject?.semester,
         quarter: grade.quarter,
         teacher_name: `${assignment.account?.firstName ?? ""} ${assignment.account?.lastName ?? ""}`,
+        lock_status: lockRecord?.status || null,
+        reason_to_unlock: lockRecord?.reason_to_unlock || null,
         locked_batches: [],
       });
     }
@@ -77,7 +90,7 @@ async function getSubjectsLockingHistory(homeroomId) {
 
     if (!batch) {
       batch = {
-        locked_key: lockedKey, // helper for grouping
+        locked_key: lockedKey,
         locked_at: grade.locked_at,
         students: [],
       };
@@ -92,7 +105,7 @@ async function getSubjectsLockingHistory(homeroomId) {
     });
   }
 
-  // Sort batches + students
+  // Sort
   for (const entry of subjectMap.values()) {
     for (const batch of entry.locked_batches) {
       batch.students.sort((a, b) =>
@@ -106,6 +119,7 @@ async function getSubjectsLockingHistory(homeroomId) {
 
   return Array.from(subjectMap.values());
 }
+
 
 
 async function create(params) {

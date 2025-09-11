@@ -39,42 +39,39 @@ async function updateQuiz(id, params) {
   await quiz.save();
 }
 
-async function getQuizzes(teacher_subject_id, param) {
-  // 1️⃣ Fetch quizzes
-  const quizzes = await db.Quiz.findAll({
-    where: {
-      teacher_subject_id,
-      quarter: param.quarter,
-      type: param.type,
-    },
-    attributes: ["id", "description", "hps", "createdAt"],
-  });
 
-  // 2️⃣ Check lock status
-  const lockRecord = await db.Subject_Quarter_Lock.findOne({
-    where: {
-      teacher_subject_id,
-      quarter: param.quarter,
-      status: "LOCKED",
-    },
-  });
+async function getQuizzes(teacher_subject_id, { quarter, type }) {
+  // Run both queries in parallel 🚀
+  const [quizzes, lockRecord] = await Promise.all([
+    db.Quiz.findAll({
+      where: { teacher_subject_id, quarter, type },
+      attributes: ["id", "description", "hps", "createdAt"],
+      raw: true, // directly return plain objects
+    }),
+    db.Subject_Quarter_Lock.findOne({
+      where: { teacher_subject_id, quarter },
+      attributes: ["status"],
+      raw: true,
+    }),
+  ]);
 
-  const isLocked = !!lockRecord; // true if found
-
-  // 3️⃣ Format quizzes
-  const formattedQuizzes = quizzes.map((q) => {
-    const quiz = q.toJSON();
-    quiz.createdAt = new Date(quiz.createdAt).toLocaleDateString("en-US", {
+  // Format dates in one pass
+  const formattedQuizzes = quizzes.map(({ createdAt, ...rest }) => ({
+    ...rest,
+    createdAt: new Date(createdAt).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    });
-    return quiz;
-  });
+    }),
+  }));
 
-  // 4️⃣ Return quizzes + locked flag
-  return { quizzes: formattedQuizzes, isLocked };
+  return {
+    quizzes: formattedQuizzes,
+    lockStatus: lockRecord?.status || "UNLOCKED", // default to UNLOCKED if null
+  };
 }
+
+
 
 
 function transmuteGrade(actual) {
@@ -214,11 +211,13 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
   });
 
   const isLocked = lockRecord?.status === "LOCKED";
+  const lockStatus = lockRecord?.status || null;
 
   // ⚡ keep return value compatible with getSemestralFinalGrade
   return {
     students: result,
     isLocked,
+    lockStatus
   };
 }
 
