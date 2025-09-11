@@ -6,31 +6,38 @@ const Role = require('../_helpers/role')
 const validateRequest = require("../_middleware/validate-request");
 const studentService = require('./student.service')
 
-router.get('/', authorize(), getStudentInfo)
-router.post('/', authorize(Role.Admin), createSchema, create)
+
+router.get('/egrades/:id', authorize(), getSubjectAndGrades)
+router.post('/', authorize(Role.Registrar), createSchema, create)
+
 
 module.exports = router
 
 
-function getStudentInfo(req, res, next){
+function getSubjectAndGrades(req, res, next){
   studentService
-    .getStudentInfo(req.params.id)
+    .getSubjectAndGrades(req.params.id)
     .then((student) => res.json(student))
     .catch(next)
-}
+} 
 
 function createSchema(req, res, next){
   const schema = Joi.object({
-    firstname: Joi.string().required(),
-    lastname: Joi.string().required()
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    sex: Joi.string().valid('M', 'F').required(),
+    email: Joi.string().email().required(),
+    homeroom_id: Joi.number().required(),
+    lrn_number: Joi.string().max(12).required(),
+    address: Joi.string().optional()
   })
 
   validateRequest(req, next, schema)
 }
 
-function create(req, res, next){
+function create(req, res, next){  
   studentService
     .create(req.body)
     .then((student) => res.json(student))
     .catch(next)
-}
+} 

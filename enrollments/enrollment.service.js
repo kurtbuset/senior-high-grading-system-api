@@ -67,8 +67,8 @@ async function getStudentsByTeacherSubjectId(teacher_subject_id) {
           "school_id",
           "sex",
           "address",
-          "guardian_name",
-          "guardian_contact",
+          // "guardian_name",
+          // "guardian_contact",
         ],
       },
     ],
@@ -85,22 +85,42 @@ async function getStudentsByTeacherSubjectId(teacher_subject_id) {
         school_id: x.student.school_id,
         sex: x.student.sex,
         address: x.student.address,
-        guardian_name: x.student.guardian_name,
-        guardian_contact: x.student.guardian_contact,
+        // guardian_name: x.student.guardian_name,
+        // guardian_contact: x.student.guardian_contact,
         is_enrolled: x.is_enrolled,
       }))
   );
 }
 
 async function create(params) {
-  const enrollment = new db.Enrollment(params);
+  console.log(params);
 
+  // find student
+  const student = await db.Student.findByPk(params.student_id);
+  if (!student) {
+    throw `Student with id ${params.student_id} not found.`;
+  }
+
+  // find teacher subject assignment
+  const teacherSubject = await db.Teacher_Subject_Assignment.findByPk(params.teacher_subject_id);
+  if (!teacherSubject) {
+    throw `Teacher subject assignment with id ${params.teacher_subject_id} not found.`;
+  }
+
+  // check homeroom match
+  if (student.homeroom_id !== teacherSubject.homeroom_id) {
+    throw `You cant enroll a student with different homeroom.).`;
+  }
+
+  // create enrollment
+  const enrollment = new db.Enrollment(params);
   enrollment.is_enrolled = false;
 
   await enrollment.save();
 
   return basicDetails(enrollment);
 }
+
 
 function basicDetails(enrollment) {
   const { id, student_id, teacher_subject_id, is_enrolled } = enrollment;

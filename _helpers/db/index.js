@@ -10,25 +10,23 @@ module.exports = db = {};
 
 
 async function initialize() {
-  // Try to get credentials from environment variables first, fallback to config.json
-  const host = process.env.DB_HOST || config.database.host;
-  const port = process.env.DB_PORT || config.database.port || 3306;
-  const user = process.env.DB_USER || config.database.user;
-  const password = process.env.DB_PASS || config.database.password;
-  const database = process.env.DB_NAME || config.database.database;
+  const host = process.env.DB_HOST; 
+  const port = process.env.DB_PORT || 3306;
+  const user = process.env.DB_USER;
+  const password = process.env.DB_PASS;
+  const database = process.env.DB_NAME; 
 
-  // Validate that we have the required credentials
-  if (!host || !user || !password || !database) {
-    console.error('Database configuration error: Missing required credentials');
-    console.error('Required: host, user, password, database');
-    console.error('Current values:', { host, user, password: password ? '***' : 'undefined', database });
-    process.exit(1);
-  } 
+  console.log('localhost: ', host)
+  console.log('port: ', port)
+  console.log('user: ', user)
+  console.log('password: ', password)
+  console.log('database: ', database)
+  
 
   const connection = await mysql.createConnection({
-    host,
+    host, 
     port, 
-    user,
+    user,   
     password,
   });
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
@@ -37,26 +35,34 @@ async function initialize() {
     host,
     port,
     dialect: "mysql",
-    logging: false  
+    logging: false,
+    dialectOptions: { connectTimeout: 60000 }
   });
 
   db.sequelize = sequelize;
-  db.Sequelize = Sequelize; 
+  db.Sequelize = Sequelize;     
 
-  db.Account = require("../../accounts/account.model")(sequelize);
-  db.refreshToken = require("../../accounts/refresh-token.model")(sequelize);
-  db.Subject = require("../../subjects/subject.model")(sequelize);
+  db.Account = require("../../_models/account.model")(sequelize);
+  db.refreshToken = require("../../_models/refresh-token.model")(sequelize);
+  db.Strand = require('../../_models/strand.model')(sequelize)
+  db.School_Year = require('../../_models/school_year.model')(sequelize)
+  db.Grade_Level = require('../../_models/grade_level.model')(sequelize)  
+  db.HomeRoom = require('../../_models/homeroom.model')(sequelize)
+  db.Subject = require("../../_models/subject.model")(sequelize);
+  db.Curriculum_Subject = require('../../_models/curriculum_subject.model')(sequelize)
   db.Teacher_Subject_Assignment =
-    require("../../teacher_subject_assignment/teacher_subject.model")(
-      sequelize
+    require("../../_models/teacher_subject.model")(
+      sequelize 
     );
-  db.Student = require("../../students/student.model")(sequelize);
-  db.Enrollment = require("../../enrollments/enrollment.model")(sequelize);
-  db.Quiz = require("../../quizzes/quiz.model")(sequelize);
-  db.Quiz_Score = require('../../quiz_scores/quiz_score.model')(sequelize)
+  db.Student = require("../../_models/student.model")(sequelize);
+  db.Enrollment = require("../../_models/enrollment.model")(sequelize);
+  db.Quiz = require("../../_models/quiz.model")(sequelize);
+  db.Quiz_Score = require('../../_models/quiz_score.model')(sequelize)
+  db.Final_Grade = require('../../_models/final_grade.model')(sequelize)
+
 
   defineAssociations(db)
-
+    
   await sequelize.sync({ alter: true });
 }
 

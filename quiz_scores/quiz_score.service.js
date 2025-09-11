@@ -41,8 +41,7 @@ async function getStudentsWithScores(quiz_id) {
   return students;
 }
 
-// get the enrolled students but no record in quiz-scores table
-// Assuming you have models defined: Enrollment, Student, QuizScore
+
 async function getStudentsWithoutScores({ teacher_subject_id, quiz_id }) {
   console.log({ teacher_subject_id, quiz_id }); // For debugging
 

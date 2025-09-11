@@ -8,7 +8,7 @@ const validateRequest = require("../_middleware/validate-request");
 
 router.get('/:id', authorize(), getOneSubject);
 router.get('/list/:id', authorize(), getSubjectsByTeacherId);
-router.post('/', authorize(Role.Admin), createSchema, create)
+router.post('/', authorize(Role.Registrar), createSchema, create)
 router.put('/:id', authorize(), updatePercentagesSchema, updatePercentages)
 
 module.exports = router;
@@ -46,7 +46,6 @@ function getSubjectsByTeacherId(req, res, next){
   teacherSubjectService
     .getSubjectsByTeacherId(req.params.id)
     .then(assignments => {
-      // console.log(JSON.stringify(assignments, null, 2))
       res.json(assignments)
     })
     .catch(next);
@@ -55,19 +54,19 @@ function getSubjectsByTeacherId(req, res, next){
 function createSchema(req, res, next){
   const schema = Joi.object({
     teacher_id: Joi.number().required(),
-    subject_id: Joi.number().required(),
-    school_year: Joi.string().valid('2024-2025', '2025-2026').required(),
-    grade_level: Joi.string().valid('11', '12').required(),
-    section: Joi.string().required(),
-    semester: Joi.string().valid('1st sem', '2nd sem').required()
-  });
+    curriculum_subject_id: Joi.number().required(),
+    homeroom_id: Joi.number().required(),
+    custom_ww_percent: Joi.number().max(99).required(),
+    custom_pt_percent: Joi.number().max(99).required(),
+    custom_qa_percent: Joi.number().max(99).required()
+  })
 
   validateRequest(req, next, schema)
 }
 
-function create(req, res, next){
+function create(req, res, next){  
   teacherSubjectService
     .create(req.body)
     .then((teacherSubject) => res.json(teacherSubject))
     .catch(next)
-}
+} 

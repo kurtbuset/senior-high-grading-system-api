@@ -30,8 +30,9 @@ async function authenticate({ username, password, ipAddress }) {
   // Try to find by email (for superadmin, admin, teacher)
   account = await db.Account.scope('withHash').findOne({ where: { email: username } });
 
+  // console.log(account)
   // If found and role is not a student
-  if (account && account.role !== 'student') {
+  if (account && account.role !== 'Student') {
     if (!(await bcrypt.compare(password, account.passwordHash)))
       throw 'Username or password is incorrect';
 
@@ -67,6 +68,7 @@ async function finalizeAuth(account, ipAddress) {
   const refreshToken = generateRefreshToken(account, ipAddress);
   await refreshToken.save();
 
+  console.log(account.id)
   return {
     ...basicDetails(account),
     jwtToken,
@@ -88,7 +90,7 @@ async function refreshToken({ token, ipAddress }) {
   await newRefreshToken.save()
 
   const jwtToken = generateJwtToken(account)
-
+ 
   return {
     ...basicDetails(account),
     jwtToken, 
@@ -132,7 +134,7 @@ async function verifyEmail({ token }) {
 
   if (!account) throw 'Verification failed'
 
-  account.isVerified = true
+  account.verified = Date.now()
   account.verificationToken = null
   await account.save()
 }
@@ -167,7 +169,7 @@ async function resetPassword({ token, password}) {
   const account = await validateResetToken({ token })
   
   account.passwordHash = await hash(password)
-  account.resetTokenExpires = null
+  account.passwordReset = Date.now()
   account.resetToken = null
   await account.save()
 }
@@ -195,68 +197,41 @@ async function create(params) {
     firstName: params.firstName,
     lastName: params.lastName,
     role: params.role,
-    isActive: params.isActive,
-    isVerified: true
+    isActive: true,
+    verified: Date.now()
   });
 
   await account.save()
-
-   // If role is Student, generate school_id and insert student info
-  if (params.role === Role.Student) {
-    const school_id = await generateSchoolId();
-    await db.Student.create({
-      account_id: account.id,
-      school_id,
-      sex: params.sex,
-      address: params.address,
-      guardian_name: params.guardian_name,
-      guardian_contact: params.guardian_contact
-    });
-  }
   
   return basicDetails(account)
 }
 
-async function generateSchoolId() {
-  const year = new Date().getFullYear();
-
-  // Count how many students exist this year
-  const latest = await db.Student.findAll({
-    where: {
-      school_id: {
-        [db.Sequelize.Op.like]: `${year}-%`
-      }
-    },
-    order: [['school_id', 'DESC']],
-    limit: 1
-  });
-
-  let nextNumber = 1;
-  if (latest.length) {
-    const lastId = latest[0].school_id.split('-')[1]; // e.g. 00001
-    nextNumber = parseInt(lastId) + 1;
-  }
-
-  return `${year}-${String(nextNumber).padStart(5, '0')}`; // e.g. 2025-00001
-}
-
 
 async function update(id, params) {
-  const account = await getAccount(id)
+  try {
+    const account = await getAccount(id);
 
-  if(params.email && account.email !== params.email && await db.Account.findOne({ where: { email: params.email}})) {
-    throw `Email '${params.email}' is already taken`
+    // Check if email is being changed and if the new email is already taken
+    if(params.email && account.email !== params.email) {
+      const existingAccount = await db.Account.findOne({ where: { email: params.email } });
+      if(existingAccount) {
+        throw `Email '${params.email}' is already registered`;
+      }
+    }
+
+    if(params.password){
+      params.passwordHash = await hash(params.password);
+    }
+
+    Object.assign(account, params);
+    account.updated = Date.now();
+    await account.save();
+
+    return basicDetails(account);
+  } catch (error) {
+    console.error('Error updating account:', error);
+    throw error;
   }
-
-  if(params.password){
-    params.passwordHash = await hash(params.password)
-  }
-
-  Object.assign(account, params)
-  account.updated = Date.now()
-  await account.save()
-
-  return basicDetails(account)
 }
 
 async function _delete(id) {
@@ -302,10 +277,9 @@ function randomTokenString(){
 }
 
 function basicDetails(account){
-  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, Employee } = account
-  // console.log(JSON.stringify(account, null, 2))
+  const { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive } = account
   
-  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive, Employee }
+  return { id, title, firstName, lastName, email, role, created, updated, isVerified, isActive }
 }
 
 

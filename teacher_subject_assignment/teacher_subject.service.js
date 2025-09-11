@@ -1,10 +1,11 @@
 const db = require("../_helpers/db");
+const model = require("../_models/account.model");
 
 module.exports = {
   create,
   getSubjectsByTeacherId,
   getOneSubject,
-  updatePercentages
+  updatePercentages,
 };
 
 async function updatePercentages(teacher_subject_id, value) {
@@ -12,11 +13,11 @@ async function updatePercentages(teacher_subject_id, value) {
   const total = custom_ww_percent + custom_pt_percent + custom_qa_percent;
 
   if (total > 100) {
-    throw "Total percentage cannot exceed 100%"
+    throw "Total percentage cannot exceed 100%";
   }
 
   if (total < 100) {
-    throw "Total percentage must be exactly 100%"
+    throw "Total percentage must be exactly 100%";
   }
 
   // Perform DB update logic here...
@@ -27,82 +28,154 @@ async function updatePercentages(teacher_subject_id, value) {
       custom_qa_percent,
     },
     {
-      where: { id: teacher_subject_id }
+      where: { id: teacher_subject_id },
     }
   );
-
 }
-
 
 // Reusable projection function
 function formatSubjectAssignment(x) {
   return {
     id: x.id,
-    subjectName: x.subject.name,
-    grade_level: x.grade_level,
-    section: x.section,
-    school_year: x.school_year,
-    semester: x.semester,
+    subjectName: x.curriculum_subject.subject.name,
+    grade_level: x.homeroom?.grade_level?.level || null,
+    section: x.homeroom?.section || null,
+    school_year: x.curriculum_subject.school_year?.school_year || null,
+    semester: x.curriculum_subject.semester,
     custom_ww_percent: x.custom_ww_percent,
     custom_pt_percent: x.custom_pt_percent,
-    custom_qa_percent: x.custom_qa_percent
+    custom_qa_percent: x.custom_qa_percent,
   };
 }
+
 
 async function getOneSubject(id) {
   const subject = await db.Teacher_Subject_Assignment.findOne({
     where: { id },
-    include: [{ model: db.Subject }]
+    include: [
+      {
+        model: db.Curriculum_Subject,
+        as: "curriculum_subject",
+        attributes: ["subject_id", "semester"],
+        include: [
+          { 
+            model: db.Subject,
+            as: "subject", // must match your association alias
+            attributes: ["name"],
+          },
+          {
+            model: db.School_Year,
+            as: "school_year",
+            attributes: ["school_year"], // 👈 fetch the school_year string
+          },
+        ],
+      },
+      {
+        model: db.HomeRoom,
+        as: "homeroom",
+        attributes: ["section", "grade_level_id"],
+        include: [
+          { 
+            model: db.Grade_Level,
+            as: "grade_level", // must match your association alias
+            attributes: ["level"],
+          }
+        ]
+      },
+    ],
   });
 
   if (!subject) {
-    throw new Error(`No subject assignment found with ID ${id}.`);
+    throw `No subject assignment found with ID ${id}.`;
   }
-
   return formatSubjectAssignment(subject);
 }
 
 async function getSubjectsByTeacherId(teacher_id) {
   const assignments = await db.Teacher_Subject_Assignment.findAll({
     where: { teacher_id },
-    include: [{ model: db.Subject }]
+    include: [
+      {
+        model: db.Curriculum_Subject,
+        as: "curriculum_subject",
+        attributes: ["subject_id", "semester"],
+        include: [
+          {
+            model: db.Subject,
+            as: "subject", // must match your association alias
+            attributes: ["name"],
+          },
+          {
+            model: db.School_Year,
+            as: "school_year",
+            attributes: ["school_year"], // 👈 fetch the school_year string
+          },
+        ],
+      },
+      {
+        model: db.HomeRoom,
+        as: "homeroom",
+        attributes: ["section", "grade_level_id"],
+        include: [
+          { 
+            model: db.Grade_Level,
+            as: "grade_level", // must match your association alias
+            attributes: ["level"],
+          }
+        ]
+      },
+    ],
   });
 
-  return assignments.map(formatSubjectAssignment);
+  // console.log(JSON.stringify(assignments, null, 2))
+
+  return assignments.map(a => formatSubjectAssignment(a));
 }
 
 async function create(params) {
   const teacher = await db.Account.findByPk(params.teacher_id);
-  if (!teacher || teacher.role !== 'Teacher') {
-    throw`Account with ID ${params.teacher_id} is not a teacher.`;
+  if (!teacher || teacher.role !== "Teacher") {
+    throw `Account with ID ${params.teacher_id} is not a teacher.`;
   }
 
-  const subject = await db.Subject.findByPk(params.subject_id);
-  if (!subject) {
-    throw `Subject with ID ${params.subject_id} does not exist.`
+  const homeroom = await db.HomeRoom.findByPk(params.homeroom_id);
+  if (!homeroom) {
+    throw `section with id ${params.homeroom_id} not found`;
   }
 
-  // const duplicate = await db.Teacher_Subject_Assignment.findOne({
-  //   where: {
-  //     section: params.section,
-  //     grade_level: params.grade_level,
-  //     semester: params.semester,
-  //     school_year: params.school_year
-  //   }
-  // });
+  const curriculumSubject = await db.Curriculum_Subject.findByPk(params.curriculum_subject_id);
+  if (!curriculumSubject) {
+    throw `curriculumSubject with id ${params.curriculum_subject_id} not found`;
+  }
 
-  // if (duplicate) {
-  //   throw`Section "${params.section}" already exists for Grade ${params.grade_level}, ${params.semester}, SY ${params.school_year}.`;
-  // }
+  const existing = await db.Teacher_Subject_Assignment.findOne({
+    where: {
+      curriculum_subject_id: params.curriculum_subject_id,
+      homeroom_id: params.homeroom_id,
+    },
+  });
 
-   const data = {
-    ...params,
-    custom_ww_percent: params.custom_ww_percent ?? subject.default_ww_percent,
-    custom_pt_percent: params.custom_pt_percent ?? subject.default_pt_percent,
-    custom_qa_percent: params.custom_qa_percent ?? subject.default_qa_percent,
-  };
+  if (existing) {
+    throw `This subject is already assigned to the homeroom (id: ${params.homeroom_id}).`;
+  }
 
-  const teacherSubject = await db.Teacher_Subject_Assignment.create(data);
+  // throw error if grade_level or strand are mismatched
+  if(homeroom.grade_level_id !== curriculumSubject.grade_level_id || homeroom.strand_id !== curriculumSubject.strand_id){
+    throw `Grade level mismatch!`
+  }
+
+  const total =
+    params.custom_ww_percent +
+    params.custom_pt_percent +
+    params.custom_qa_percent;
+  if (total > 100) {
+    throw `The sum of WW, PT, and QA percentages must not exceed 100.`;
+  }
+
+
+  const teacherSubject = await db.Teacher_Subject_Assignment.create(params);
+
+  // return teacherSubject
   return basicDetails(teacherSubject);
 }
 
@@ -110,26 +183,22 @@ function basicDetails(teacherSubject) {
   const {
     id,
     teacher_id,
-    subject_id,
-    school_year,
-    grade_level,
-    section,
-    semester,
+    curriculum_subject_id,
+    homeroom_id,
     custom_ww_percent,
     custom_pt_percent,
-    custom_qa_percent
+    custom_qa_percent,
+    school_year
   } = teacherSubject;
 
   return {
     id,
     teacher_id,
-    subject_id,
     school_year,
-    grade_level,
-    section,
-    semester,
+    curriculum_subject_id,
+    homeroom_id,
     custom_ww_percent,
     custom_pt_percent,
-    custom_qa_percent
+    custom_qa_percent,
   };
 }

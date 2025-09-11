@@ -51,7 +51,7 @@ function refreshToken(req, res, next) {
   accountService
     .refreshToken({ token, ipAddress })
     .then(({ refreshToken, ...account }) => {
-      // add new refresh token from cookie
+      // add new refresh token to cookie
       setTokenCookie(res, refreshToken);
       res.json(account);
     })
@@ -68,8 +68,6 @@ function revokeTokenSchema(req, res, next) {
 function revokeToken(req, res, next) {
   const token = req.body.token || req.cookies.refreshToken;
   const ipAddress = req.ip;
-  console.log('token: ', req.cookies.refreshToken)
-  // console.log('ipAddress', req.ip)
   if (!token) return res.status(400).json({ msg: "Token is expired" });
 
   if (!req.user.ownsToken(token) && req.user.role !== Role.Admin) {
@@ -97,7 +95,7 @@ function registerSchema(req, res, next) {
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
+    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Registrar, Role.Principal, Role.Teacher, Role.Student).required(),
   });
   validateRequest(req, next, schema);
 }
@@ -183,7 +181,7 @@ function getAll(req, res, next) {
 }
 
 function getById(req, res, next) {
-  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
+  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin && req.user.role !== Role.SuperAdmin) {
     return res.status(401).json({ msg: "Unauthorized" });
   }
 
@@ -200,73 +198,57 @@ function createSchema(req, res, next) {
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Teacher, Role.Student).required(),
-    isActive: Joi.boolean().required(),
-
-    // Only required if role is Student
-    sex: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().valid('M', 'F').required(),
-      otherwise: Joi.forbidden()
-    }),
-    address: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
-    guardian_name: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
-    guardian_contact: Joi.when('role', {
-      is: Role.Student,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden()
-    }),
+    role: Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Registrar, Role.Principal, Role.Teacher, Role.Student).required()
   });
   validateRequest(req, next, schema);
 }
 
 function create(req, res, next) {
-  accountService
+  accountService  
     .create(req.body)
     .then((account) => res.json(account))
     .catch(next);
-}
+} 
 
 function updateSchema(req, res, next) {
   const schemaRules = {
-    title: Joi.string().empty(""),
-    firstName: Joi.string().empty(""),
-    lastName: Joi.string().empty(""),
-    email: Joi.string().email().empty(""),
-    password: Joi.string().min(6).empty(""),
-    confirmPassword: Joi.string().valid(Joi.ref("password")).empty(""),
+    title: Joi.string().empty("").optional(),
+    firstName: Joi.string().empty("").optional(),
+    lastName: Joi.string().empty("").optional(),
+    email: Joi.string().email().empty("").optional(),
+    password: Joi.string().min(6).empty("").optional(),
+    confirmPassword: Joi.string().valid(Joi.ref("password")).empty("").optional(),
+    isActive: Joi.boolean().optional(), // Allow isActive to be updated
   };
 
-  if (req.user.role === Role.Admin) {
-    schemaRules.role = Joi.string().valid(Role.Admin, Role.Teacher).empty("");
-    schemaRules.isActive = Joi.boolean();
+  if (req.user.role === Role.Admin || req.user.role === Role.SuperAdmin) {
+    schemaRules.role = Joi.string().valid(Role.SuperAdmin, Role.Admin, Role.Registrar, Role.Principal, Role.Teacher, Role.Student).empty("").optional();
   }
 
-  const schema = Joi.object(schemaRules).with("password", "confirmPassword");
+  const schema = Joi.object(schemaRules);
+  // Only validate password confirmation if password is provided
+  if (req.body.password) {
+    schema.with("password", "confirmPassword");
+  }
   validateRequest(req, next, schema);
 }
 
 function update(req, res, next) {
-  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
+  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin && req.user.role !== Role.SuperAdmin) {
     return res.status(401).json({ msg: "Unauthorized" });
   }
 
   accountService
     .update(req.params.id, req.body)
     .then((account) => res.json(account))
-    .catch(next);
+    .catch(err => {
+      console.error('Update account error:', err);
+      next(err);
+    });
 }
 
 function _delete(req, res, next) {
-  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
+  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin && req.user.role !== Role.SuperAdmin) {
     return res.status(401).json({ msg: "Unauthorized" });
   }
 
