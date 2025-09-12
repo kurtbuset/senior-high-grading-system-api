@@ -34,7 +34,13 @@ app.use('/curriculum-subjects', require('./curriculum_subjects/curriculum_subjec
 
 app.use('/homerooms', require('./homerooms/homeroom.controller'))
 
+app.use('/grade-level', require('./grade_level/grade_level.controller'))
+
 app.use('/final-grades', require('./final_grades/final-grade.controller'))
+
+app.use('/school-year', require('./school_year/school_year.controller'))
+
+app.use('/strand', require('./strands/strand.controller'))
 
 app.use('/subject-quarter-locks', require('./subject_quarter_locks/subject_quarter_lock.controller'))
 

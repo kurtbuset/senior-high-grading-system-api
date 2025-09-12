@@ -1,8 +1,8 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
 const accountModel = require('../_models/account.model');
-const bcrypt = require('bcryptjs')
-const role = require('../_helpers/role')
+const bcrypt = require('bcryptjs');
+const role = require('../_helpers/role');
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -23,7 +23,7 @@ async function seed() {
 
     await Account.sync(); // Ensure table exists
 
-    await Account.bulkCreate([
+    const accounts = [
       {
         firstName: 'prin',
         lastName: "cipal",
@@ -74,9 +74,16 @@ async function seed() {
         role: role.Teacher,
         created: Date.now()
       },
-    ]);
+    ];
 
-    console.log('✅ Accounts seeded!');
+    for (const acc of accounts) {
+      await Account.findOrCreate({
+        where: { email: acc.email },
+        defaults: acc
+      });
+    }
+
+    console.log('✅ Accounts seeded (duplicates skipped)!');
     await sequelize.close();
   } catch (error) {
     console.error('❌ Seeding failed:', error);

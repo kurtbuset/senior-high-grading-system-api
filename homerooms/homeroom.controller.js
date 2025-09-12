@@ -9,13 +9,30 @@ const homeroomService = require('./homeroom.service')
 router.get('/', authorize(), getHomerooms)
 router.get('/:id', authorize(), getOneHomeroom)
 router.get('/conso/:id', authorize(), getConsolidatedSheet)
-router.get('/locking-history/:id', authorize(), getSubjectsHistory)
+router.post('/', authorize(Role.Registrar), createSchema, create)
 
 module.exports = router
 
-function getSubjectsHistory(req, res, next){
-    
+function create(req, res, next){
+  homeroomService
+    .create(req.body)
+    .then((result) => res.json(result))
+    .catch(next)
 }
+
+function createSchema(req, res, next) {
+  const schema = Joi.object({
+    grade_level_id: Joi.number().integer().required(),
+    section: Joi.string().required(),
+    strand_id: Joi.number().integer().required(),
+    school_year_id: Joi.number().integer().required(),
+    teacher_id: Joi.number().integer().required(),
+  });
+
+  validateRequest(req, next, schema);
+}
+
+
 
 function getConsolidatedSheet(req, res, next){
   const { semester } = req.query

@@ -27,6 +27,7 @@
     "rootpath": "^0.1.2",
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.3",
+    "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0"
   }
