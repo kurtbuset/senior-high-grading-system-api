@@ -37,7 +37,8 @@ function createSchema(req, res, next){
     email: Joi.string().email().required(),
     homeroom_id: Joi.number().required(),
     lrn_number: Joi.string().max(12).required(),
-    address: Joi.string().optional()
+    address: Joi.string().optional(),
+    school_id: Joi.string().max(20).required(),
   })
 
   validateRequest(req, next, schema)

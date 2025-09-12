@@ -228,7 +228,8 @@ async function create(params) {
     sex,
     homeroom_id,
     address,
-    lrn_number
+    lrn_number,
+    school_id
   } = params;
 
   // 1. Validate homeroom
@@ -243,12 +244,17 @@ async function create(params) {
     throw `An account with the email "${email}" already exists.`;
   }
 
-  // 3. Generate school_id and password
-  const school_id = await generateSchoolId();
+  // 3. Validate school_id uniqueness
+  const existingSchoolId = await db.Student.findOne({ where: { school_id } });
+  if (existingSchoolId) {
+    throw `Student with school_id "${school_id}" already exists.`;
+  }
+
+  // 4. Use school_id as password
   const plainPassword = school_id;
   const passwordHash = await bcrypt.hash(plainPassword, 10);
 
-  // 4. Create Account
+  // 5. Create Account
   const account = await db.Account.create({
     firstName,
     lastName,
@@ -260,7 +266,7 @@ async function create(params) {
     created: Date.now(),
   });
 
-  // 5. Create Student
+  // 6. Create Student
   const student = await db.Student.create({
     account_id: account.id,
     school_id,
@@ -270,18 +276,18 @@ async function create(params) {
     lrn_number,
   });
 
-  // 6. Find all subject assignments for this homeroom
+  // 7. Find all subject assignments for this homeroom
   const assignments = await db.Teacher_Subject_Assignment.findAll({
     where: { homeroom_id },
   });
 
-  // 7. Enroll student in each assignment
+  // 8. Enroll student in each assignment
   const enrollments = [];
   for (const assignment of assignments) {
     const enrollment = await db.Enrollment.create({
       student_id: student.id,
       teacher_subject_id: assignment.id,
-      is_enrolled: false, // add this if you have a flag column
+      is_enrolled: false,
     });
     enrollments.push(enrollment);
   }
@@ -290,12 +296,13 @@ async function create(params) {
     message: "Student, account, and enrollments successfully created.",
     student,
     account: {
-      username: student.school_id,
-      password: plainPassword, // share with admin
+      username: student.school_id,   // 👈 user logs in with school_id
+      password: plainPassword,       // 👈 same value as school_id
     },
     enrollments,
   };
 }
+
 
 
 // helper function
