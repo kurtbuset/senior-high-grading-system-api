@@ -6,7 +6,7 @@ const Role = require("../_helpers/role");
 module.exports = {
   create,
   getSubjectAndGrades,
-  getStudentInfo
+  getStudentInfo,
 };
 
 async function getStudentInfo(accountId) {
@@ -41,8 +41,6 @@ async function getStudentInfo(accountId) {
     throw error;
   }
 }
-
-
 
 async function getSubjectAndGrades(account_id) {
   // fetch student with homeroom, grade level, strand, school_year
@@ -154,7 +152,6 @@ async function getSubjectAndGrades(account_id) {
       let enrollmentId = null;
       let firstQuarter = null;
       let secondQuarter = null;
-      let finalAverage = null;
 
       if (assignment) {
         const enrollment = await db.Enrollment.findOne({
@@ -172,23 +169,32 @@ async function getSubjectAndGrades(account_id) {
             lastName: assignment.account.lastName,
           };
 
-          // 🔑 Fetch final grades if locked
+          // 🔑 Fetch final grades
           const grades = await db.Final_Grade.findAll({
             where: { enrollment_id: enrollment.id },
             attributes: ["quarter", "final_grade", "locked_at"],
+            order: [["locked_at", "DESC"]], // make sure newest are first 
           });
 
+          // group by quarter and take only the latest
+          const latestGrades = {};
           for (const g of grades) {
-            if (g.quarter === "First Quarter" && g.locked_at) {
-              firstQuarter = g.final_grade;
-            }
-            if (g.quarter === "Second Quarter" && g.locked_at) {
-              secondQuarter = g.final_grade;
+            if (!latestGrades[g.quarter]) {
+              latestGrades[g.quarter] = g; // only take the first (newest) per quarter  
             }
           }
 
-          if (firstQuarter !== null && secondQuarter !== null) {
-            finalAverage = Math.round((firstQuarter + secondQuarter) / 2);
+          if (
+            latestGrades["First Quarter"] &&
+            latestGrades["First Quarter"].locked_at
+          ) { 
+            firstQuarter = latestGrades["First Quarter"].final_grade;
+          }
+          if (
+            latestGrades["Second Quarter"] &&
+            latestGrades["Second Quarter"].locked_at
+          ) {
+            secondQuarter = latestGrades["Second Quarter"].final_grade;
           }
         }
       }
@@ -204,7 +210,9 @@ async function getSubjectAndGrades(account_id) {
         enrollmentId,
         firstQuarter,
         secondQuarter,
-        finalAverage,
+        finalAverage: firstQuarter !== null && secondQuarter !== null
+            ? (firstQuarter + secondQuarter) / 2
+            : null,
       };
     })
   );
@@ -216,10 +224,6 @@ async function getSubjectAndGrades(account_id) {
   };
 }
 
-
-
-
-
 async function create(params) {
   const {
     firstName,
@@ -229,7 +233,7 @@ async function create(params) {
     homeroom_id,
     address,
     lrn_number,
-    school_id
+    school_id,
   } = params;
 
   // 1. Validate homeroom
@@ -296,14 +300,12 @@ async function create(params) {
     message: "Student, account, and enrollments successfully created.",
     student,
     account: {
-      username: student.school_id,   // 👈 user logs in with school_id
-      password: plainPassword,       // 👈 same value as school_id
+      username: student.school_id, // 👈 user logs in with school_id
+      password: plainPassword, // 👈 same value as school_id
     },
     enrollments,
   };
 }
-
-
 
 // helper function
 async function generateSchoolId() {

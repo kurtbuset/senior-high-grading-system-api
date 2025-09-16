@@ -1,350 +1,82 @@
-require('dotenv').config();
-const { Sequelize } = require('sequelize');
-const curriculumSubjectModel = require('../_models/curriculum_subject.model');
+const curriculumSubjectModel = require("../_models/curriculum_subject.model");
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host: process.env.DB_HOST,
-    dialect: 'mysql',
-  }
-);
+module.exports = async (sequelize) => {
+  const CurriculumSubject = curriculumSubjectModel(sequelize);
 
-const curriculumSubject = curriculumSubjectModel(sequelize);
+  // ✅ Constants
+  const GRADE_LEVELS = { G11: 1, G12: 2 };
+  const STRANDS = { STEM: 1, HUMMS: 2, ABM: 3, GAS: 4 };
+  const SCHOOL_YEAR = { SY_2025_2026: 2 };
+  const SEMESTERS = { FIRST: "FIRST SEMESTER", SECOND: "SECOND SEMESTER" };
 
-async function seed() {
+  // ✅ Subject IDs grouped by strand/semester/grade level
+  const subjectMap = {
+    HUMMS: {
+      [GRADE_LEVELS.G11]: {
+        [SEMESTERS.FIRST]: [1, 3, 5, 7, 10, 14, 17, 21, 53, 51],
+        [SEMESTERS.SECOND]: [2, 4, 6, 9, 16, 18, 22, 26, 49, 52],
+      },
+      [GRADE_LEVELS.G12]: {
+        [SEMESTERS.FIRST]: [11, 12, 15, 19, 23, 25, 48, 51, 54],
+        [SEMESTERS.SECOND]: [20, 27, 28, 47, 55],
+      },
+    },
+    STEM: { 
+      [GRADE_LEVELS.G11]: {
+        [SEMESTERS.FIRST]: [1, 3, 5, 7, 10, 14, 17, 21, 56, 58],
+        [SEMESTERS.SECOND]: [2, 4, 6, 9, 16, 18, 22, 26, 57, 59],  
+      },
+      [GRADE_LEVELS.G12]: {
+        [SEMESTERS.FIRST]: [11, 12, 15, 19, 23, 25, 60, 62],
+        [SEMESTERS.SECOND]: [20, 27, 28, 61, 63, 64],  
+      },  
+    },
+    ABM: {
+      [GRADE_LEVELS.G11]: {
+        [SEMESTERS.FIRST]: [1, 3, 5, 7, 10, 14, 17, 21, 38, 44],
+        [SEMESTERS.SECOND]: [2, 4, 6, 9, 16, 18, 22, 26, 40, 42],
+      },
+      [GRADE_LEVELS.G12]: {
+        [SEMESTERS.FIRST]: [11, 12, 15, 19, 23, 25, 41, 43, 45],
+        [SEMESTERS.SECOND]: [20, 27, 28, 39, 46],
+      },
+    },
+    GAS: {
+      [GRADE_LEVELS.G11]: {
+        [SEMESTERS.FIRST]: [1, 3, 5, 7, 10, 14, 17, 21, 35, 34],
+        [SEMESTERS.SECOND]: [2, 4, 6, 9, 16, 18, 22, 26, 30, 29],
+      },
+      [GRADE_LEVELS.G12]: {
+        [SEMESTERS.FIRST]: [11, 12, 15, 19, 23, 25, 32, 33, 36],
+        [SEMESTERS.SECOND]: [20, 27, 28, 31, 37],
+      },
+    },
+  };
+
   try {
-    await sequelize.authenticate();
-    console.log('✅ Connected to database.');
+    const records = [];
 
-    await curriculumSubject.sync(); // Ensure table exists
+    for (const [strandKey, levels] of Object.entries(subjectMap)) {
+      for (const [gradeLevel, semesters] of Object.entries(levels)) { 
+        for (const [semester, subjects] of Object.entries(semesters)) {
+          for (const subject_id of subjects) {
+            records.push({
+              subject_id,
+              grade_level_id: Number(gradeLevel),
+              strand_id: STRANDS[strandKey],
+              semester,
+              school_year_id: SCHOOL_YEAR.SY_2025_2026,
+            });
+          }
+        }
+      }
+    } 
 
-    await curriculumSubject.bulkCreate([
-      {
-        // 11 humms 1st sem s.y. 2025-2026
-        subject_id: 1,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 3,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },  
-      {
-        subject_id: 5,  
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 7,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 10,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 14,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 17,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 21,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 53,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 51,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-
-      // 11 humms 2nd sem s.y. 2025-2026
-      {
-        subject_id: 2,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 4,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 6,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 9,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 16,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 18,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 22,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 26,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 49,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 52,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      // 12 humms 1st sem s.y. 2025-2026
-      {
-        subject_id: 11,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 12,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 15,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 19,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 23,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 24,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 48,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 50,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 54,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 2
-      },
-      // 12 humms 2nd sem s.y. 2025-2026
-      {
-        subject_id: 20,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 27,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 28,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 47,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      {
-        subject_id: 55,
-        grade_level_id: 2,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 2
-      },
-      // sy 2024-2025 humms gr11 1st sem
-      {
-        subject_id: 1,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 1
-      },
-      {
-        subject_id: 2,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 1
-      },  
-      {
-        subject_id: 3,  
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 1
-      },
-      {
-        subject_id: 4,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 1
-      },
-      {
-        subject_id: 5,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'FIRST SEMESTER',
-        school_year_id: 1
-      },
-      // sy 2024-2025 humms gr11 1st sem
-      {
-        // 11 humms 2nd sem s.y. 2025-2026
-        subject_id: 6,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 1
-      },
-      {
-        subject_id: 7,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 1
-      },  
-      {
-        subject_id: 8,  
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 1
-      },
-      {
-        subject_id: 9,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 1
-      },
-      {
-        subject_id: 10,
-        grade_level_id: 1,
-        strand_id: 2,
-        semester: 'SECOND SEMESTER',
-        school_year_id: 1
-      },
-    ]);
-
-    console.log('✅ curriculum subjects seeded!');
-    await sequelize.close();
+    await CurriculumSubject.bulkCreate(records, { ignoreDuplicates: true });
+    console.log("✅ Curriculum subjects seeded!");
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    console.error("❌ Curriculum subjects seeding failed:", error);
   }
-}
 
-seed();
+  // 🔒 DO NOT close the connection here; seed.js manages it
+};

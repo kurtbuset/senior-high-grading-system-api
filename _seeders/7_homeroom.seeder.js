@@ -26,49 +26,74 @@ async function seed() {
     await Homeroom.bulkCreate([
       {
         grade_level_id: 1,
-        section: "HUMMS A",
+        section: "HUMMS 11 A",
         strand_id: 2,
         school_year_id: 2,
         teacher_id: 4
       },
       {
         grade_level_id: 1,
-        section: "HUMMS B",
+        section: "HUMMS 11 B",
         strand_id: 2,
         school_year_id: 2,
         teacher_id: 5
       },
       {
         grade_level_id: 2,
-        section: "HUMMS C",
+        section: "HUMMS 11 C",
         strand_id: 2,
         school_year_id: 2,
         teacher_id: 6
       },
       {
         grade_level_id: 2,
-        section: "HUMMS D",
+        section: "HUMMS 11 D",
         strand_id: 2,
+        school_year_id: 2,
+        teacher_id: 6
+      },
+       {
+        grade_level_id: 1,
+        section: "STEM 11",
+        strand_id: 1,
+        teacher_id: 6,
+        school_year_id: 2,
+      },
+       {
+        grade_level_id: 2,
+        section: "STEM 12",
+        strand_id: 1,
         school_year_id: 2,
         teacher_id: 6
       },
       {
         grade_level_id: 1,
-        section: "HUMMS 2024 2025",
-        strand_id: 2,
-        school_year_id: 1,
-        teacher_id: 4
+        section: "ABM 11",
+        strand_id: 3,
+        school_year_id: 2,
+        teacher_id: 5
       },
-      //  {
-      //   grade_level_id: 2,
-      //   section: "STEM C",
-      //   strand_id: 1
-      // },
-      //  {
-      //   grade_level_id: 2,
-      //   section: "STEM B",
-      //   strand_id: 1
-      // },
+      {
+        grade_level_id: 2,
+        section: "ABM 12",
+        strand_id: 3,
+        school_year_id: 2,
+        teacher_id: 5
+      },
+      {
+        grade_level_id: 1,
+        section: "GAS 11",
+        strand_id: 4,
+        school_year_id: 2,
+        teacher_id: 5
+      },
+      {
+        grade_level_id: 1,
+        section: "GAS 12",
+        strand_id: 3,
+        school_year_id: 2,
+        teacher_id: 5
+      },
     ]);
 
     console.log('✅ Homerooms seeded!');

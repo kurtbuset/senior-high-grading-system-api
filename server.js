@@ -52,7 +52,13 @@ app.use(errorHandler)
 const port = process.env.NODE_ENV === 'production' ? (process.env.DB_PORT || 80) : 4000
 app.listen(port, async () => {
   console.log(`LISTENING ON PORT ${port}`);
-  await superAdminSeed();
+  try {
+    await superAdminSeed(); // your existing super admin seeder
+    // await runSeeds(); // centralized seed script
+    console.log('🌱 All initial seeds executed successfully!');
+  } catch (err) {
+    console.error('❌ Seeding failed on server start:', err);
+  }
 });
 
     

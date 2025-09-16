@@ -164,10 +164,14 @@ module.exports = function defineAssociations(db) {
   db.Enrollment.belongsTo(db.Teacher_Subject_Assignment, {
     foreignKey: "teacher_subject_id",
     as: "assignment",
+    onDelete: "CASCADE", // ✅ delete enrollment if teacher_subject is deleted
+    onUpdate: "CASCADE",
   });
   db.Teacher_Subject_Assignment.hasMany(db.Enrollment, {
     foreignKey: "teacher_subject_id",
     as: "enrollments",
+    onDelete: "CASCADE", // ✅ cascade delete
+    onUpdate: "CASCADE",
   });
 
   // Many-to-Many: Student ↔ TeacherSubjectAssignment (through Enrollment)

@@ -21,13 +21,15 @@ function model(sequelize) {
       references: {
         model: "teacher_subject_assignments",
         key: "id",
-      }
+      },
+      onDelete: "CASCADE",   // ✅ important
+      onUpdate: "CASCADE",
     },
     is_enrolled: {
       type: DataTypes.BOOLEAN
     }
   };
-  
+
   const options = {
     timestamps: false,
   };

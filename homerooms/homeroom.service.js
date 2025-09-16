@@ -69,7 +69,7 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
       attributes: ["id", "subject_id"],
     });
 
-    const subjectIdsSet = new Set(subjects.map((s) => s.subject_id)); // faster lookup
+    const subjectIdsSet = new Set(subjects.map((s) => s.subject_id));
 
     // 3. Fetch students + enrollments + grades
     const students = await db.Student.findAll({
@@ -85,7 +85,11 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
               as: "assignment",
               include: [{ model: db.Curriculum_Subject, as: "curriculum_subject", attributes: ["subject_id"] }],
             },
-            { model: db.Final_Grade, as: "final_grades", attributes: ["quarter", "final_grade"] },
+            {
+              model: db.Final_Grade,
+              as: "final_grades",
+              attributes: ["quarter", "final_grade", "locked_at"],
+            },
           ],
         },
       ],
@@ -106,11 +110,22 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
 
         const subjectGrades = gradesBySubject[subjId] ?? { first: null, second: null, ave: null };
 
-        final_grades.forEach(({ quarter, final_grade }) => {
-          if (quarter === "First Quarter") subjectGrades.first = final_grade;
-          if (quarter === "Second Quarter") subjectGrades.second = final_grade;
+        // ✅ pick latest grade per quarter
+        const latestByQuarter = {};
+        final_grades.forEach(({ quarter, final_grade, locked_at }) => {
+          if (!latestByQuarter[quarter] || new Date(locked_at) > new Date(latestByQuarter[quarter].locked_at)) {
+            latestByQuarter[quarter] = { final_grade, locked_at };
+          }
         });
 
+        if (latestByQuarter["First Quarter"]) {
+          subjectGrades.first = latestByQuarter["First Quarter"].final_grade;
+        }
+        if (latestByQuarter["Second Quarter"]) {
+          subjectGrades.second = latestByQuarter["Second Quarter"].final_grade;
+        }
+
+        // ✅ compute average only if both exist
         if (subjectGrades.first !== null && subjectGrades.second !== null) {
           subjectGrades.ave = Math.round((subjectGrades.first + subjectGrades.second) / 2);
         }
@@ -131,6 +146,7 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
     throw error;
   }
 }
+
 
 
 
