@@ -13,7 +13,7 @@ const runSeeds = async () => {
       dialect: "mysql",
       logging: false,
     }
-  );
+  );  
 
   try {
     await sequelize.authenticate();
@@ -26,6 +26,7 @@ const runSeeds = async () => {
     const strandSeed = require("./_seeders/4_strand.seeder");
     const subjectSeed = require("./_seeders/5_subject.seeder");
     const curriculumSubjectSeed = require("./_seeders/6_curriculum_subject.seeder");
+    const homeroomSeed = require("./_seeders/7_homeroom.seeder");
 
     // 3. Run seeds sequentially (pass sequelize!)
     await accountsSeed(sequelize);
@@ -34,6 +35,7 @@ const runSeeds = async () => {
     await strandSeed(sequelize);
     await subjectSeed(sequelize);
     await curriculumSubjectSeed(sequelize);
+    await homeroomSeed(sequelize)
 
     console.log("🌱 All seeds executed successfully!");
   } catch (err) {

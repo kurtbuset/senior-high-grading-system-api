@@ -73,3 +73,4 @@ module.exports = async (sequelize) => {
 
   console.log("🌱 Accounts seeding completed!");
 };
+  

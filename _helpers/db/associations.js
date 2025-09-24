@@ -10,6 +10,7 @@ module.exports = function defineAssociations(db) {
   });
   db.Teacher_Subject_Assignment.belongsTo(db.Account, {
     foreignKey: "teacher_id",
+    as: "teacher"
   });
 
   // One-to-One: Account ↔ Student

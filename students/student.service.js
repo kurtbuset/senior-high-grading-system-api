@@ -141,7 +141,7 @@ async function getSubjectAndGrades(account_id) {
         include: [
           {
             model: db.Account,
-            as: "account",
+            as: "teacher",
             attributes: ["id", "firstName", "lastName"],
           },
         ],
@@ -165,8 +165,8 @@ async function getSubjectAndGrades(account_id) {
           isEnrolled = true;
           enrollmentId = enrollment.id;
           teacher = {
-            firstName: assignment.account.firstName,
-            lastName: assignment.account.lastName,
+            firstName: assignment.teacher.firstName,
+            lastName: assignment.teacher.lastName,
           };
 
           // 🔑 Fetch final grades
@@ -211,7 +211,7 @@ async function getSubjectAndGrades(account_id) {
         firstQuarter,
         secondQuarter,
         finalAverage: firstQuarter !== null && secondQuarter !== null
-            ? (firstQuarter + secondQuarter) / 2
+            ? Math.round((firstQuarter + secondQuarter) / 2)
             : null,
       };
     })

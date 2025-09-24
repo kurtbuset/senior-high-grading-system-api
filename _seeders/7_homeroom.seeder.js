@@ -1,106 +1,62 @@
-require('dotenv').config();
-const { Sequelize } = require('sequelize');
-const homeroomModel = require('../_models/homeroom.model');
-const bcrypt = require('bcryptjs')
-const role = require('../_helpers/role')
+const homeroomModel = require('../_models/homeroom.model')
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host: process.env.DB_HOST,
-    dialect: 'mysql',
+module.exports = async (sequelize) => {
+  const Homeroom = homeroomModel(sequelize)
+
+
+  const GRADE_LEVELS = { G11: 1, G12: 2 }
+  const STRANDS = { STEM: 1, HUMMS: 2, ABM: 3, GAS: 4 }
+  const SCHOOL_YEAR = { SY_2025_2026: 2 }
+
+  const homeroomMap = {
+    HUMMS: {
+      [GRADE_LEVELS.G11]: [
+        { section: "A CONSOLACION", teacher_id: 5 },
+        { section: "B COMPOSTELA", teacher_id: 5 },
+      ]
+    }, 
+    ABM: {
+      [GRADE_LEVELS.G11]: [
+        { section: "A BORBOM", teacher_id: 5 },
+        { section: "B BALAMBAM", teacher_id: 5 },
+      ]
+    },
+    GAS: {
+      [GRADE_LEVELS.G11]: [
+        { section: "DANAO", teacher_id: 5 },
+      ]
+    },
+    STEM: {
+      [GRADE_LEVELS.G11]: [
+        { section: "A SAN REMEGIO", teacher_id: 5 },
+        { section: "B SANTA FE", teacher_id: 5 },
+      ],
+      [GRADE_LEVELS.G12]: [
+        { section: "A CARCAR", teacher_id: 5 }
+      ]
+    },
   }
-);
 
-const Homeroom = homeroomModel(sequelize);
+  try{
+    const records = []
 
-async function seed() {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Connected to database.');
+    for(const [strandKey, levels] of Object.entries(homeroomMap)){
+      for(const [gradeLevel, homerooms] of Object.entries(levels)){
+        for(const homeroom of homerooms){
+          records.push({
+            grade_level_id: Number(gradeLevel),
+            strand_id: STRANDS[strandKey],
+            school_year_id: SCHOOL_YEAR.SY_2025_2026,
+            section: homeroom.section,
+            teacher_id: homeroom.teacher_id
+          })
+        }
+      }
+    }
 
-    await Homeroom.sync(); // Ensure table exists
-
-    await Homeroom.bulkCreate([
-      {
-        grade_level_id: 1,
-        section: "HUMMS 11 A",
-        strand_id: 2,
-        school_year_id: 2,
-        teacher_id: 4
-      },
-      {
-        grade_level_id: 1,
-        section: "HUMMS 11 B",
-        strand_id: 2,
-        school_year_id: 2,
-        teacher_id: 5
-      },
-      {
-        grade_level_id: 2,
-        section: "HUMMS 11 C",
-        strand_id: 2,
-        school_year_id: 2,
-        teacher_id: 6
-      },
-      {
-        grade_level_id: 2,
-        section: "HUMMS 11 D",
-        strand_id: 2,
-        school_year_id: 2,
-        teacher_id: 6
-      },
-       {
-        grade_level_id: 1,
-        section: "STEM 11",
-        strand_id: 1,
-        teacher_id: 6,
-        school_year_id: 2,
-      },
-       {
-        grade_level_id: 2,
-        section: "STEM 12",
-        strand_id: 1,
-        school_year_id: 2,
-        teacher_id: 6
-      },
-      {
-        grade_level_id: 1,
-        section: "ABM 11",
-        strand_id: 3,
-        school_year_id: 2,
-        teacher_id: 5
-      },
-      {
-        grade_level_id: 2,
-        section: "ABM 12",
-        strand_id: 3,
-        school_year_id: 2,
-        teacher_id: 5
-      },
-      {
-        grade_level_id: 1,
-        section: "GAS 11",
-        strand_id: 4,
-        school_year_id: 2,
-        teacher_id: 5
-      },
-      {
-        grade_level_id: 1,
-        section: "GAS 12",
-        strand_id: 3,
-        school_year_id: 2,
-        teacher_id: 5
-      },
-    ]);
-
-    console.log('✅ Homerooms seeded!');
-    await sequelize.close();
-  } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    await Homeroom.bulkCreate(records, { ignoreDuplicates: true })
+    console.log("Homerooms seeded!")
+  } catch(error) {
+    console.error("homeroom seeding failed", error)
   }
 }
-
-seed();

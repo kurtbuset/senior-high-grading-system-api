@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const { Op } = require("sequelize");
 const sendEmail = require("../_helpers/send-email");
 const db = require("../_helpers/db");
+const { getIO } = require("../socket");
 
 module.exports = {
   create,
@@ -30,7 +31,7 @@ async function getSubjectsLockingHistory(homeroomId) {
                 as: "curriculum_subject",
                 include: [{ model: db.Subject, as: "subject" }],
               },
-              { model: db.Account, as: "account" },
+              { model: db.Account, as: "teacher" },
               {
                 model: db.Subject_Quarter_Lock,
                 as: "quarter_locks",
@@ -60,7 +61,9 @@ async function getSubjectsLockingHistory(homeroomId) {
       assignment.curriculum_subject?.subject?.name,
       assignment.curriculum_subject?.semester,
       grade.quarter,
-      `${assignment.account?.firstName ?? ""} ${assignment.account?.lastName ?? ""}`,
+      `${assignment.account?.firstName ?? ""} ${
+        assignment.account?.lastName ?? ""
+      }`,
     ].join("|");
 
     if (!subjectMap.has(subjectKey)) {
@@ -74,7 +77,9 @@ async function getSubjectsLockingHistory(homeroomId) {
         subject_name: assignment.curriculum_subject?.subject?.name,
         semester: assignment.curriculum_subject?.semester,
         quarter: grade.quarter,
-        teacher_name: `${assignment.account?.firstName ?? ""} ${assignment.account?.lastName ?? ""}`,
+        teacher_name: `${assignment.teacher?.firstName ?? ""} ${
+          assignment.teacher?.lastName ?? ""
+        }`,
         lock_status: lockRecord?.status || null,
         reason_to_unlock: lockRecord?.reason_to_unlock || null,
         locked_batches: [],
@@ -120,11 +125,65 @@ async function getSubjectsLockingHistory(homeroomId) {
   return Array.from(subjectMap.values());
 }
 
-
-
 async function create(params) {
   console.log(params);
   const inserted = await db.Final_Grade.bulkCreate(params, { returning: true });
+
+  const notifications = [];
+  for (const grade of inserted) {
+    const enrollment = await db.Enrollment.findOne({
+      where: { id: grade.enrollment_id },
+      include: [
+        {
+          model: db.Student,
+          as: "student",
+          attributes: ["account_id"],
+        },
+        {
+          model: db.Teacher_Subject_Assignment,
+          as: "assignment",
+          include: [
+            { model: db.Account, as: "teacher", attributes: ["id"] },
+            {
+              model: db.Curriculum_Subject,
+              as: "curriculum_subject",
+              include: [
+                { model: db.Subject, as: "subject", attributes: ["name"] },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (enrollment) {
+      const notif = {
+        recipient_id: enrollment.student.account_id,
+        sender_id: enrollment.assignment.teacher.id,
+        type: "LOCKED",
+        message: `${grade.quarter} grade for ${enrollment.assignment.curriculum_subject.subject.name} just released.`,
+      };
+      console.log(notif);
+      notifications.push(notif);
+
+      getIO().to(enrollment.student.account_id).emit("newNotification", notif);
+
+      const gradeUpdate = {
+        subjectId: enrollment.assignment.curriculum_subject.id,
+        quarter: grade.quarter,
+        final_grade: grade.final_grade,
+        locked_at: grade.locked_at,
+      };
+
+      getIO()
+        .to(enrollment.student.account_id)
+        .emit("gradeUpdated", gradeUpdate);
+    }
+  }
+
+  if (notifications.length > 0) {
+    await db.Notification.bulkCreate(notifications);
+  }
 
   return inserted;
 }

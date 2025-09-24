@@ -40,6 +40,13 @@ async function requestToUnlock(teacher_subject_id, params) {
       teacher_subject_id,
       quarter: params.quarter,
     },
+    include: [
+      {
+        model: db.Teacher_Subject_Assignment,
+        as: "assignment",
+        inclde: [{ model: db.Account, as: "teacher"}]
+      }
+    ]
   });
 
   if (!lock) {
