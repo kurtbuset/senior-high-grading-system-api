@@ -53,8 +53,7 @@ async function requestToUnlock(teacher_subject_id, params) {
     throw new Error("No lock record found for this subject and quarter.");
   }
 
-  lock.reason_to_unlock = params.reason;
-  lock.status = "PENDING";
+  lock.status = "UNLOCKED";
 
   await lock.save();
 

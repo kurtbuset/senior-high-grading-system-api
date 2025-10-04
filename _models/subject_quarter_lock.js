@@ -14,11 +14,10 @@ function model(sequelize){
     },
     quarter: { type: DataTypes.ENUM('First Quarter', 'Second Quarter'), allowNull: false },
     lock_counts: { type: DataTypes.INTEGER },
-    status: { type: DataTypes.ENUM('LOCKED', 'UNLOCKED', 'PENDING'), allowNull: false },
-    reason_to_unlock: { type: DataTypes.STRING },
+    status: { type: DataTypes.ENUM('LOCKED', 'UNLOCKED'), allowNull: false }
   } 
   
-  const options = { 
+  const options = {   
     timestamps: false
   } 
 

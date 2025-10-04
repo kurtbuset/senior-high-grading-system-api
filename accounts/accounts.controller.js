@@ -17,12 +17,20 @@ router.post("/validate-reset-token", validateResetTokenSchema, validateResetToke
 router.post("/reset-password", resetPasswordSchema, resetPassword);
 
 router.get("/", authorize(Role.SuperAdmin), getAll);     
+router.get("/teachers", authorize([Role.Registrar, Role.Principal]), getAllTeachers)
 router.get("/:id", authorize(), getById);
 router.post("/", authorize(Role.SuperAdmin), createSchema, create);
 router.put("/:id", authorize(), updateSchema, update);
 router.delete("/:id", authorize(), _delete);
 
 module.exports = router;
+  
+function getAllTeachers(req, res, next){
+   accountService
+    .getAllTeachers()
+    .then((teachers) => res.json(teachers))
+    .catch(next);
+}
 
 function authenticateSchema(req, res, next) {
   const schema = Joi.object({

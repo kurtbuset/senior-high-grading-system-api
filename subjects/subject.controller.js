@@ -8,7 +8,7 @@ const Type = require('./type')
 const Role = require('../_helpers/role')
 
 
-router.get('/', authorize(Role.Registrar), getAllSubjects)
+router.get('/', authorize(Role.Principal), getAllSubjects)
 router.post('/', authorize(Role.SuperAdmin), createSchema, create)
 
 module.exports = router;

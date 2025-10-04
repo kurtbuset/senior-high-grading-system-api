@@ -10,7 +10,7 @@ module.exports = {
   getHomerooms,
   getOneHomeroom,
   getConsolidatedSheet,
-  create
+  create,
 };
 
 async function create(params) {
@@ -41,23 +41,32 @@ async function create(params) {
   return homeroom;
 }
 
-
 // services/homeroom.service.js or controller
 async function getConsolidatedSheet(homeroomId, { semester }) {
   try {
-    // 1. Fetch homeroom info
+    // 1️⃣ Fetch homeroom info
     const homeroom = await db.HomeRoom.findOne({
       where: { id: homeroomId },
       include: [
-        { model: db.Grade_Level, as: "grade_level", attributes: ["id", "level"] },
+        {
+          model: db.Grade_Level,
+          as: "grade_level",
+          attributes: ["id", "level"],
+        },
         { model: db.Strand, as: "strand", attributes: ["id", "code", "name"] },
       ],
-      attributes: ["id", "grade_level_id", "strand_id", "section", "school_year_id"],
+      attributes: [
+        "id",
+        "grade_level_id",
+        "strand_id",
+        "section",
+        "school_year_id",
+      ],
     });
 
     if (!homeroom) throw new Error("Homeroom not found");
 
-    // 2. Fetch subjects
+    // 2️⃣ Fetch subjects + assigned teachers
     const subjects = await db.Curriculum_Subject.findAll({
       where: {
         grade_level_id: homeroom.grade_level_id,
@@ -65,13 +74,40 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
         semester,
         school_year_id: homeroom.school_year_id,
       },
-      include: [{ model: db.Subject, as: "subject", attributes: ["id", "name"] }],
+      include: [
+        { model: db.Subject, as: "subject", attributes: ["id", "name"] },
+        {
+          model: db.Teacher_Subject_Assignment,
+          as: "assignments",
+          required: false,
+          where: { homeroom_id: homeroom.id },
+          include: [
+            {
+              model: db.Account,
+              as: "teacher",
+              attributes: ["id", "firstName", "lastName"],
+            },
+          ],
+        },
+      ],
       attributes: ["id", "subject_id"],
     });
 
     const subjectIdsSet = new Set(subjects.map((s) => s.subject_id));
 
-    // 3. Fetch students + enrollments + grades
+    const shapedSubjects = subjects.map((s) => {
+      const assignment = s.assignments[0];
+      return {
+        curriculum_subject_id: s.id, // ✅ curriculum_subject.id
+        subject: s.subject,
+        teacherId: assignment?.teacher?.id || null,
+        teacher: assignment?.teacher
+          ? `${assignment.teacher.lastName}, ${assignment.teacher.firstName}`
+          : null,
+      };
+    });
+
+    // 3️⃣ Fetch students + enrollments + grades
     const students = await db.Student.findAll({
       where: { homeroom_id: homeroom.id },
       include: [
@@ -83,7 +119,13 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
             {
               model: db.Teacher_Subject_Assignment,
               as: "assignment",
-              include: [{ model: db.Curriculum_Subject, as: "curriculum_subject", attributes: ["subject_id"] }],
+              include: [
+                {
+                  model: db.Curriculum_Subject,
+                  as: "curriculum_subject",
+                  attributes: ["id", "subject_id"], // ✅ include id here
+                },
+              ],
             },
             {
               model: db.Final_Grade,
@@ -100,20 +142,31 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
       attributes: ["id", "account_id"],
     });
 
-    // 4. Shape students
+    // 4️⃣ Shape student grades
     const shapedStudents = students.map((student) => {
       const gradesBySubject = {};
 
       student.enrollments.forEach(({ assignment, final_grades }) => {
-        const subjId = assignment?.curriculum_subject?.subject_id;
-        if (!subjId || !subjectIdsSet.has(subjId)) return;
+        const curriculumSubjId = assignment?.curriculum_subject?.id;
+        if (
+          !curriculumSubjId ||
+          !subjectIdsSet.has(assignment.curriculum_subject.subject_id)
+        )
+          return;
 
-        const subjectGrades = gradesBySubject[subjId] ?? { first: null, second: null, ave: null };
+        const subjectGrades = gradesBySubject[curriculumSubjId] ?? {
+          first: null,
+          second: null,
+          ave: null,
+        };
 
-        // ✅ pick latest grade per quarter
+        // get latest per quarter
         const latestByQuarter = {};
         final_grades.forEach(({ quarter, final_grade, locked_at }) => {
-          if (!latestByQuarter[quarter] || new Date(locked_at) > new Date(latestByQuarter[quarter].locked_at)) {
+          if (
+            !latestByQuarter[quarter] ||
+            new Date(locked_at) > new Date(latestByQuarter[quarter].locked_at)
+          ) {
             latestByQuarter[quarter] = { final_grade, locked_at };
           }
         });
@@ -125,12 +178,14 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
           subjectGrades.second = latestByQuarter["Second Quarter"].final_grade;
         }
 
-        // ✅ compute average only if both exist
+        // compute SFG if both quarters exist
         if (subjectGrades.first !== null && subjectGrades.second !== null) {
-          subjectGrades.ave = Math.round((subjectGrades.first + subjectGrades.second) / 2);
+          subjectGrades.ave = Math.round(
+            (subjectGrades.first + subjectGrades.second) / 2
+          );
         }
 
-        gradesBySubject[subjId] = subjectGrades;
+        gradesBySubject[curriculumSubjId] = subjectGrades; // ✅ correct key now
       });
 
       return {
@@ -140,14 +195,13 @@ async function getConsolidatedSheet(homeroomId, { semester }) {
       };
     });
 
-    return { homeroom, subjects, students: shapedStudents };
+    // 5️⃣ Return combined data
+    return { homeroom, subjects: shapedSubjects, students: shapedStudents };
   } catch (error) {
     console.error("Error fetching consolidated sheet:", error);
     throw error;
   }
 }
-
-
 
 
 async function getOneHomeroom(homeroomId) {
@@ -180,7 +234,7 @@ async function getOneHomeroom(homeroomId) {
     grade_level: homeroom.grade_level.level,
     section: homeroom.section,
     strand: homeroom.strand.name,
-    school_year: homeroom.school_year.school_year
+    school_year: homeroom.school_year.school_year,
   };
 }
 
@@ -191,8 +245,8 @@ async function getHomerooms(role, accountId) {
     whereClause.teacher_id = accountId; // only their homerooms
   }
   // Registrar or Principal → no filter (all homerooms)
-  console.log(role)
-  console.log(whereClause)
+  console.log(role);
+  console.log(whereClause);
 
   const homerooms = await db.HomeRoom.findAll({
     where: whereClause,
@@ -226,5 +280,3 @@ async function getHomerooms(role, accountId) {
     school_year: h.school_year.school_year,
   }));
 }
-
-

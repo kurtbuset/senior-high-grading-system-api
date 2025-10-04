@@ -181,6 +181,8 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
 
       const transmutedGrade = transmuteGrade(initialGrade);
 
+      const description = getDescription(transmutedGrade);
+
       return {
         enrollment_id: enrollment.id,
         firstName: enrollment.student.account.firstName,
@@ -193,6 +195,7 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
         qaWeightedScore: qa.weighted,
         initialGrade,
         transmutedGrade,
+        description
       };
     })
   );
@@ -220,6 +223,19 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
     lockStatus
   };
 }
+
+function getDescription(average) {
+  return average >= 90
+    ? "Outstanding"
+    : average >= 85
+    ? "Very Satisfactory"
+    : average >= 80
+    ? "Satisfactory"
+    : average >= 75
+    ? "Fairly Satisfactory"
+    : "Did Not Meet Expectations";
+}
+
 
 
 // O (1) - fastest - using Map
@@ -268,7 +284,7 @@ const semestralGrades = students.map(({ id, student }) => {
 
   let remarks = "", description = "";
   if (bothHaveGrades) {
-    remarks = average >= 75 ? "PASSED" : "FAILED";
+    remarks = average >= 75 ? "Passed" : "Failed";
     description =
       average >= 90
         ? "Outstanding"

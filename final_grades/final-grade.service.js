@@ -133,7 +133,7 @@ async function create(params) {
   for (const grade of inserted) {
     const enrollment = await db.Enrollment.findOne({
       where: { id: grade.enrollment_id },
-      include: [
+      include: [  
         {
           model: db.Student,
           as: "student",

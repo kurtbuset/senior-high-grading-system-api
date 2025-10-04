@@ -20,6 +20,7 @@ module.exports = {
   create,
   update,
   delete: _delete,
+  getAllTeachers
 }
 
 async function authenticate({ username, password, ipAddress }) {
@@ -178,6 +179,22 @@ async function getAll() {
   })
   return accounts.map(x => basicDetails(x))
 }
+
+async function getAllTeachers() {
+  try {
+    const teachers = await db.Account.findAll({
+      where: { role: "Teacher" },
+      attributes: ["id", "firstName", "lastName", "email", "isActive"], // pick only what you need
+      order: [["lastName", "ASC"], ["firstName", "ASC"]], // sorted by name
+    });
+
+    return teachers;
+  } catch (error) {
+    console.error("Error fetching teachers:", error);
+    throw error;
+  }
+}
+
 
 async function getById(id) {
   const account = await getAccount(id)

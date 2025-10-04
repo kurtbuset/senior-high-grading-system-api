@@ -2,10 +2,10 @@ const db = require("../_helpers/db");
 const model = require("../_models/account.model");
 
 module.exports = {
-  create,
   getSubjectsByTeacherId,
   getOneSubject,
   updatePercentages,
+  saveAssignment
 };
 
 async function updatePercentages(teacher_subject_id, value) {
@@ -132,27 +132,29 @@ async function getSubjectsByTeacherId(teacher_id) {
   return assignments.map(a => formatSubjectAssignment(a));
 }
 
-
-async function create(params) {
-  // 1. Validate teacher
+async function saveAssignment(params) {
+  console.log(params)
+  // 1️⃣ Validate teacher
   const teacher = await db.Account.findByPk(params.teacher_id);
   if (!teacher || teacher.role !== "Teacher") {
     throw `Account with ID ${params.teacher_id} is not a teacher.`;
   }
 
-  // 2. Validate homeroom
+  // 2️⃣ Validate homeroom
   const homeroom = await db.HomeRoom.findByPk(params.homeroom_id);
   if (!homeroom) {
     throw `Section with id ${params.homeroom_id} not found`;
   }
 
-  // 3. Validate curriculum subject
-  const curriculumSubject = await db.Curriculum_Subject.findByPk(params.curriculum_subject_id);
+  // 3️⃣ Validate curriculum subject
+  const curriculumSubject = await db.Curriculum_Subject.findByPk(
+    params.curriculum_subject_id
+  );
   if (!curriculumSubject) {
     throw `CurriculumSubject with id ${params.curriculum_subject_id} not found`;
   }
 
-  // 4. Check for duplicate assignment
+  // 4️⃣ Find existing assignment (for both assign/update)
   const existing = await db.Teacher_Subject_Assignment.findOne({
     where: {
       curriculum_subject_id: params.curriculum_subject_id,
@@ -160,52 +162,82 @@ async function create(params) {
     },
   });
 
-  if (existing) {
-    throw `This subject is already assigned to the homeroom (id: ${params.homeroom_id}).`;
-  }
-
-  // 5. Throw error if grade_level or strand are mismatched
+  // 5️⃣ Grade level/strand validation
   if (
     homeroom.grade_level_id !== curriculumSubject.grade_level_id ||
     homeroom.strand_id !== curriculumSubject.strand_id
   ) {
-    throw `Grade level mismatch!`;
+    throw `Grade level or strand mismatch between homeroom and curriculum subject.`;
   }
 
-  // 6. Validate percentages
+  // 6️⃣ Validate total percentages
   const total =
-    params.custom_ww_percent +
-    params.custom_pt_percent +
-    params.custom_qa_percent;
+    (params.custom_ww_percent || 0) +
+    (params.custom_pt_percent || 0) +
+    (params.custom_qa_percent || 0);
   if (total > 100) {
     throw `The sum of WW, PT, and QA percentages must not exceed 100.`;
   }
 
-  // 7. Create the teacher subject assignment
-  const teacherSubject = await db.Teacher_Subject_Assignment.create(params);
+  let teacherSubject;
 
-  // 8. Find all students in that homeroom
-  const students = await db.Student.findAll({
-    where: { homeroom_id: params.homeroom_id },
-  });
+  // 7️⃣ Handle assign or update logic
+  if (params.action === "assign") {
+    if (existing) {
+      throw `This subject is already assigned to the homeroom (id: ${params.homeroom_id}).`;
+    }
 
-  // 9. Auto-enroll each student into enrollments
-  const enrollments = [];
-  for (const student of students) {
-    const enrollment = await db.Enrollment.create({
-      student_id: student.id,
-      teacher_subject_id: teacherSubject.id,
-      is_enrolled: false, // ✅ add if you track enrollment status
+    teacherSubject = await db.Teacher_Subject_Assignment.create({
+      curriculum_subject_id: params.curriculum_subject_id,
+      homeroom_id: params.homeroom_id,
+      teacher_id: params.teacher_id,
+      custom_ww_percent: 30,
+      custom_pt_percent: 50,
+      custom_qa_percent: 20,
     });
-    enrollments.push(enrollment);
+
+    // Auto-enroll students in that homeroom
+    const students = await db.Student.findAll({
+      where: { homeroom_id: params.homeroom_id },
+    });
+
+    const enrollments = [];
+    for (const student of students) {
+      const enrollment = await db.Enrollment.create({
+        student_id: student.id,
+        teacher_subject_id: teacherSubject.id,
+        is_enrolled: false,
+      });
+      enrollments.push(enrollment);
+    }
+
+    return {
+      message: "Subject successfully assigned to teacher.",
+      teacherSubject: basicDetails(teacherSubject),
+      enrolled_students: enrollments.length,
+    };
   }
 
-  // 10. Return summary
-  return {
-    teacherSubject: basicDetails(teacherSubject),
-    enrolled_students: enrollments.length,
-  };
+  // 8️⃣ If action === "update"
+  if (params.action === "update") {
+    if (!existing) {
+      throw `No existing assignment found for this subject and homeroom.`;
+    }
+
+    // Update teacher
+    existing.teacher_id = params.teacher_id;
+    await existing.save();
+
+    return {
+      message: "Teacher successfully updated for this subject.",
+      teacherSubject: basicDetails(existing),
+    };
+  }
+
+  // 9️⃣ Invalid action
+  throw `Invalid action type. Use 'assign' or 'update'.`;
 }
+
 
 function basicDetails(teacherSubject) {
   const {
@@ -222,7 +254,6 @@ function basicDetails(teacherSubject) {
   return {
     id,
     teacher_id,
-    school_year,
     curriculum_subject_id,
     homeroom_id,
     custom_ww_percent,
@@ -230,4 +261,6 @@ function basicDetails(teacherSubject) {
     custom_qa_percent,
   };
 }
+
+
 

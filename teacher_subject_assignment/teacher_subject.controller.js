@@ -8,7 +8,7 @@ const validateRequest = require("../_middleware/validate-request");
 
 router.get('/:id', authorize(), getOneSubject);
 router.get('/list/:id', authorize(), getSubjectsByTeacherId);
-router.post('/', authorize(Role.Registrar), createSchema, create)
+router.post('/', authorize(Role.Principal), saveSchema, save);
 router.put('/:id', authorize(), updatePercentagesSchema, updatePercentages)
 
 module.exports = router;
@@ -51,22 +51,20 @@ function getSubjectsByTeacherId(req, res, next){
     .catch(next);
 }
 
-function createSchema(req, res, next){
+function saveSchema(req, res, next){
   const schema = Joi.object({
     teacher_id: Joi.number().required(),
     curriculum_subject_id: Joi.number().required(),
     homeroom_id: Joi.number().required(),
-    custom_ww_percent: Joi.number().max(99).required(),
-    custom_pt_percent: Joi.number().max(99).required(),
-    custom_qa_percent: Joi.number().max(99).required()
+    action: Joi.string().valid('assign', 'update').required(),
   })
 
   validateRequest(req, next, schema)
 }
 
-function create(req, res, next){  
-  teacherSubjectService 
-    .create(req.body)
-    .then((teacherSubject) => res.json(teacherSubject))
-    .catch(next)
-} 
+function save(req, res, next) {
+  teacherSubjectService
+    .saveAssignment(req.body)
+    .then((result) => res.json(result))
+    .catch(next);
+}
