@@ -18,9 +18,10 @@ router.post("/reset-password", resetPasswordSchema, resetPassword);
 
 router.get("/", authorize(Role.SuperAdmin), getAll);     
 router.get("/teachers", authorize([Role.Registrar, Role.Principal]), getAllTeachers)
-router.get("/:id", authorize(), getById);
+router.get("/:id", authorize(Role.SuperAdmin), getById);
 router.post("/", authorize(Role.SuperAdmin), createSchema, create);
-router.put("/:id", authorize(), updateSchema, update);
+router.put("/update-password/:id", authorize(), updatePasswordSchema, updatePassword);
+router.put('/:id', authorize(), updateSchema, update);
 router.delete("/:id", authorize(), _delete);
 
 module.exports = router;
@@ -188,7 +189,7 @@ function getAll(req, res, next) {
 }
 
 function getById(req, res, next) {
-  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
+  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.SuperAdmin) {
     return res.status(401).json({ msg: "Unauthorized" });
   }
 
@@ -217,7 +218,7 @@ function create(req, res, next) {
     .catch(next);
 } 
 
-function updateSchema(req, res, next) {
+function updatePasswordSchema(req, res, next) {
   const schemaRules = {
     password: Joi.string().min(6).empty(""),
     confirmPassword: Joi.string().valid(Joi.ref("password")).empty(""),
@@ -228,15 +229,42 @@ function updateSchema(req, res, next) {
   validateRequest(req, next, schema);
 }
 
-function update(req, res, next) { 
-  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
-    return res.status(401).json({ msg: "Unauthorized" });
-  }
-
+function updatePassword(req, res, next) { 
   accountService
     .update(req.params.id, req.body)
     .then((account) => res.json(account))
     .catch(next);
+}
+
+
+function updateSchema(req, res, next) {
+    const schemaRules = {
+        firstName: Joi.string().empty(''),
+        lastName: Joi.string().empty(''),
+        email: Joi.string().email().empty(''),
+        isActive: Joi.boolean(),
+        password: Joi.string().min(6).empty(''),
+        confirmPassword: Joi.string().valid(Joi.ref('password')).empty('')
+    };
+
+    // only admins can update role
+    if (req.user.role === Role.SuperAdmin) {
+        schemaRules.role = Joi.string().valid(Role.SuperAdmin, Role.Teacher, Role.Principal, Role.Registrar, Role.Student).empty('');
+    }
+
+    const schema = Joi.object(schemaRules).with('password', 'confirmPassword');
+    validateRequest(req, next, schema);
+}
+
+function update(req, res, next) {
+    // users can update their own account and admins can update any account
+    if (Number(req.params.id) !== req.user.id && req.user.role !== Role.SuperAdmin) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    accountService.update(req.params.id, req.body)
+        .then(account => res.json(account))
+        .catch(next);
 }
 
 function _delete(req, res, next) {

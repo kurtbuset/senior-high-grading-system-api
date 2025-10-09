@@ -18,6 +18,7 @@ module.exports = {
   getAll,
   getById,
   create,
+  updatePassword,
   update,
   delete: _delete,
   getAllTeachers
@@ -174,9 +175,7 @@ async function resetPassword({ token, password}) {
 }
 
 async function getAll() {
-  const accounts = await db.Account.findAll({
-    include: db.Employee
-  })
+  const accounts = await db.Account.findAll()
   return accounts.map(x => basicDetails(x))
 }
 
@@ -222,7 +221,7 @@ async function create(params) {
 }
 
 
-async function update(id, params) {
+async function updatePassword(id, params) {
   const account = await getAccount(id);
 
   // if password was provided, hash it
@@ -237,8 +236,30 @@ async function update(id, params) {
   Object.assign(account, params);
   account.updated = Date.now();
   await account.save();
-
+  console.log(JSON.stringify(account, null, 2))
   return basicDetails(account);
+}
+
+
+async function update(id, params) {
+    const account = await getAccount(id);
+
+    // validate (if email was changed)
+    if (params.email && account.email !== params.email && await db.Account.findOne({ where: { email: params.email } })) {
+        throw 'Email "' + params.email + '" is already taken';
+    }
+
+    // hash password if it was entered
+    if (params.password) {
+        params.passwordHash = await hash(params.password);
+    }
+
+    // copy params to account and save
+    Object.assign(account, params);
+    account.updated = Date.now();
+    await account.save();
+
+    return basicDetails(account);
 }
 
 
