@@ -191,9 +191,9 @@ async function saveAssignment(params) {
       curriculum_subject_id: params.curriculum_subject_id,
       homeroom_id: params.homeroom_id,
       teacher_id: params.teacher_id,
-      custom_ww_percent: 30,
+      custom_ww_percent: 25,
       custom_pt_percent: 50,
-      custom_qa_percent: 20,
+      custom_qa_percent: 25,
     });
 
     // Auto-enroll students in that homeroom

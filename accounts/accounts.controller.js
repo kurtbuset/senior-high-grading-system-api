@@ -17,7 +17,7 @@ router.post("/validate-reset-token", validateResetTokenSchema, validateResetToke
 router.post("/reset-password", resetPasswordSchema, resetPassword);
 
 router.get("/", authorize(Role.SuperAdmin), getAll);     
-router.get("/teachers", authorize([Role.Registrar, Role.Principal]), getAllTeachers)
+router.get("/teachers", authorize(), getAllTeachers)
 router.get("/:id", authorize(Role.SuperAdmin), getById);
 router.post("/", authorize(Role.SuperAdmin), createSchema, create);
 router.put("/update-password/:id", authorize(), updatePasswordSchema, updatePassword);
