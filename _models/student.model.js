@@ -27,7 +27,7 @@
         }
       },
       address: { type: DataTypes.STRING }, 
-      lrn_number: { type: DataTypes.STRING, allowNull: false }
+      // lrn_number: { type: DataTypes.STRING, allowNull: false }
     };
     
     const options = {
