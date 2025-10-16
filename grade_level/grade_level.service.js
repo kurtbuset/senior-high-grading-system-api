@@ -1,7 +1,15 @@
 const db = require("../_helpers/db");
 
 module.exports = {
-  create
+  create,
+  getGradeLevels
+}
+
+async function getGradeLevels() {
+  return await db.Grade_Level.findAll({
+    attributes: ["id", "level"],
+    order: [["level", "ASC"]],
+  });
 }
 
 async function create(params){

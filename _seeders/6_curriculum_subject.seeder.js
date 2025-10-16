@@ -90,7 +90,7 @@ module.exports = async (sequelize) => {
 
     if (uniqueRecords.length > 0) {
       await CurriculumSubject.bulkCreate(uniqueRecords);
-    }
+    } 
 
     const total = await CurriculumSubject.count();
     console.log(`✅ Curriculum subjects seeded successfully! Total records: ${total}`);

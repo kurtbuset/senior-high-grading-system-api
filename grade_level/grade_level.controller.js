@@ -7,9 +7,16 @@ const gradeLevelService = require('../grade_level/grade_level.service')
 const validateRequest = require("../_middleware/validate-request");
 
 router.post('/', authorize(Role.Registrar), createSchema, create)
+router.get("/", authorize(Role.Principal), getGradeLevels);
 
 module.exports = router;
 
+function getGradeLevels(req, res, next) {
+  gradeLevelService
+    .getGradeLevels()
+    .then((data) => res.json(data))
+    .catch(next);
+}
 
 function createSchema(req, res, next){
   const schema = Joi.object({

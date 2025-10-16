@@ -25,8 +25,8 @@ const runSeeds = async () => {
     const schoolYearSeed = require("./_seeders/3_school_year.seeder");
     const strandSeed = require("./_seeders/4_strand.seeder");
     const subjectSeed = require("./_seeders/5_subject.seeder");
-    const curriculumSubjectSeed = require("./_seeders/6_curriculum_subject.seeder");
-    const homeroomSeed = require("./_seeders/7_homeroom.seeder");
+    // const curriculumSubjectSeed = require("./_seeders/6_curriculum_subject.seeder");
+    // const homeroomSeed = require("./_seeders/7_homeroom.seeder");
 
     // 3. Run seeds sequentially (pass sequelize!)
     await accountsSeed(sequelize);
@@ -34,8 +34,8 @@ const runSeeds = async () => {
     await schoolYearSeed(sequelize);
     await strandSeed(sequelize);
     await subjectSeed(sequelize);
-    await curriculumSubjectSeed(sequelize);
-    await homeroomSeed(sequelize)
+    // await curriculumSubjectSeed(sequelize);
+    // await homeroomSeed(sequelize) 
 
     console.log("🌱 All seeds executed successfully!");
   } catch (err) {

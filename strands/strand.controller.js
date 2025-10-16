@@ -6,6 +6,7 @@ const Joi = require("joi");
 const strandService = require("./strand.service");
 const validateRequest = require("../_middleware/validate-request");
 
+router.get("/", authorize(Role.Principal), getStrands);
 router.post("/", authorize(Role.Registrar), createSchema, create);
 
 module.exports = router;
@@ -17,6 +18,13 @@ function createSchema(req, res, next) {
   });
 
   validateRequest(req, next, schema);
+}
+
+function getStrands(req, res, next) {
+  strandService
+    .getStrands()
+    .then((data) => res.json(data))
+    .catch(next);
 }
 
 function create(req, res, next) {

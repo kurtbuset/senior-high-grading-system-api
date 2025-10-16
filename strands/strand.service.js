@@ -1,7 +1,15 @@
 const db = require("../_helpers/db");
 
 module.exports = {
-  create
+  create,
+  getStrands
+}
+
+async function getStrands() {
+  return await db.Strand.findAll({
+    attributes: ["id", "name", "code"],
+    order: [["id", "ASC"]],
+  });
 }
 
 async function create(params){

@@ -84,7 +84,11 @@ function revokeToken(req, res, next) {
     }
 
     accountService.revokeToken({ token, ipAddress })
-        .then(() => res.json({ message: 'Token revoked' }))
+        .then(() => {
+          // remove refresh token from cookie
+          res.clearCookie('refreshToken');
+          res.json({ msg: "Token revoked" })
+        })
         .catch(next);
 }
 

@@ -7,8 +7,16 @@ const schoolYearService = require('../school_year/school_year.service')
 const validateRequest = require("../_middleware/validate-request");
 
 router.post('/', authorize(Role.Registrar), createSchema, create)
+router.get("/", authorize(Role.Principal), getSchoolYears);
 
 module.exports = router;
+
+function getSchoolYears(req, res, next) {
+  schoolYearService
+    .getSchoolYears()
+    .then((data) => res.json(data))
+    .catch(next);
+}
 
 function createSchema(req, res, next){
   const schema = Joi.object({

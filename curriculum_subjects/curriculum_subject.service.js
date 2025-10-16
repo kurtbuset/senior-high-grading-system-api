@@ -2,13 +2,82 @@ const db = require("../_helpers/db");
 
 module.exports = {
   create,
-  getFilteredSubjects
+  getFilteredSubjects,
+  setSubjects,
+};
+
+async function setSubjects(subjectsArray) {
+  if (!Array.isArray(subjectsArray) || subjectsArray.length === 0) {
+    throw "No subjects provided";
+  }
+
+  const createdSubjects = [];
+
+  for (const s of subjectsArray) {
+    // Validate required fields
+    if (
+      !s.subject_id ||
+      !s.grade_level_id ||
+      !s.strand_id ||
+      !s.semester ||
+      !s.school_year_id
+    ) {
+      console.warn("⚠️ Skipping invalid entry:", s);
+      continue;
+    }
+
+    // Check existence
+    const subject = await db.Subject.findByPk(s.subject_id);
+    const gradeLevel = await db.Grade_Level.findByPk(s.grade_level_id);
+    const strand = await db.Strand.findByPk(s.strand_id);
+    const schoolYear = await db.School_Year.findByPk(s.school_year_id);
+
+    if (!subject || !gradeLevel || !strand || !schoolYear) {
+      console.warn("⚠️ Skipping non-existing relations:", s);
+      continue;
+    }
+
+    // Avoid duplicates: check if already exists
+    const exists = await db.Curriculum_Subject.findOne({
+      where: {
+        subject_id: s.subject_id,
+        grade_level_id: s.grade_level_id,
+        strand_id: s.strand_id,
+        semester: s.semester,
+        school_year_id: s.school_year_id,
+      },
+    });
+
+    if (exists) {
+      console.log(`ℹ️ Curriculum subject already exists, skipping.`);
+      continue;
+    }
+
+    // Create record
+    const created = await db.Curriculum_Subject.create({
+      subject_id: s.subject_id,
+      grade_level_id: s.grade_level_id,
+      strand_id: s.strand_id,
+      semester: s.semester,
+      school_year_id: s.school_year_id,
+    });
+
+    createdSubjects.push(created);
+  }
+
+  console.log("✅ Created curriculum subjects:", createdSubjects.length);
+  return createdSubjects;
 }
 
-async function getFilteredSubjects({ grade_level, strand, semester, school_year }) {
+async function getFilteredSubjects({
+  grade_level,
+  strand,
+  semester,
+  school_year,
+}) {
   // If no filters, return ALL subjects
   if (!grade_level && !strand && !semester && !school_year) {
-    return db.Subject.findAll();  // plain list of all subjects
+    return db.Subject.findAll(); // plain list of all subjects
   }
 
   const where = {};
@@ -18,10 +87,10 @@ async function getFilteredSubjects({ grade_level, strand, semester, school_year 
   }
 
   const include = [
-    { model: db.Subject, as: "subject" }, 
+    { model: db.Subject, as: "subject" },
     { model: db.Grade_Level, as: "grade_level" },
     { model: db.Strand, as: "strand" },
-    { model: db.School_Year, as : "school_year" }
+    { model: db.School_Year, as: "school_year" },
   ];
 
   // Apply grade_level filter (match by level)
@@ -41,17 +110,16 @@ async function getFilteredSubjects({ grade_level, strand, semester, school_year 
 
   const results = await db.Curriculum_Subject.findAll({
     where,
-    include
+    include,
   });
 
-  console.log(JSON.stringify(results, null, 2))
+  console.log(JSON.stringify(results, null, 2));
   // Map only to subject info
-  return results.map(cs => cs.subject);
+  return results.map((cs) => cs.subject);
 }
 
-
-async function create(params){
-   // check subject
+async function create(params) {
+  // check subject
   const subject = await db.Subject.findByPk(params.subject_id);
   if (!subject) {
     throw `Subject with id ${params.subject_id} not found`;
@@ -74,5 +142,5 @@ async function create(params){
     throw `school year with id ${params.strand_id} not found`;
   }
 
-  return await db.Curriculum_Subject.create(params)
+  return await db.Curriculum_Subject.create(params);
 }

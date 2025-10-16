@@ -1,8 +1,17 @@
 const db = require("../_helpers/db");
 
 module.exports = {
-  create
+  create,
+  getSchoolYears
 }
+
+async function getSchoolYears() {
+  return await db.School_Year.findAll({
+    attributes: ["id", "school_year", "is_active"],
+    order: [["id", "DESC"]],
+  });
+}
+
 
 async function create(params){
   // 🔎 Check duplicate school year
