@@ -78,31 +78,35 @@ async function finalizeAuth(account, ipAddress) {
 
 
 async function refreshToken({ token, ipAddress }) {
-  const refreshToken = await getRefreshToken(token)
-  const account = await refreshToken.getAccount()
-  // console.log(JSON.stringify(refreshToken, null, 2))
-  const newRefreshToken = generateRefreshToken(account, ipAddress)
-  refreshToken.revoked = Date.now()
+    const refreshToken = await getRefreshToken(token);
+    const account = await refreshToken.getAccount();
 
-  refreshToken.revokedByIp = ipAddress
-  refreshToken.replacedByToken = newRefreshToken.token
-  await refreshToken.save()
-  await newRefreshToken.save()
+    // replace old refresh token with a new one and save
+    const newRefreshToken = generateRefreshToken(account, ipAddress);
+    refreshToken.revoked = Date.now();
+    refreshToken.revokedByIp = ipAddress;
+    refreshToken.replacedByToken = newRefreshToken.token;
+    await refreshToken.save();
+    await newRefreshToken.save();
 
-  const jwtToken = generateJwtToken(account)
- 
-  return {
-    ...basicDetails(account),
-    jwtToken, 
-    refreshToken: newRefreshToken.token
-  }
+    // generate new jwt
+    const jwtToken = generateJwtToken(account);
+
+    // return basic details and tokens
+    return {
+        ...basicDetails(account),
+        jwtToken,
+        refreshToken: newRefreshToken.token
+    };
 }
 
 async function revokeToken({ token, ipAddress }) {
-  const refreshToken = await getRefreshToken(token)
-  refreshToken.revoked = Date.now()
-  refreshToken.revokedByIp = ipAddress
-  await refreshToken.save()
+    const refreshToken = await getRefreshToken(token);
+
+    // revoke token and save
+    refreshToken.revoked = Date.now();
+    refreshToken.revokedByIp = ipAddress;
+    await refreshToken.save();
 }
 
 

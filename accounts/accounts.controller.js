@@ -54,46 +54,38 @@ function authenticate(req, res, next) {
 }
 
 function refreshToken(req, res, next) {
-  const token = req.cookies.refreshToken;
-  const ipAddress = req.ip;
-  accountService
-    .refreshToken({ token, ipAddress })
-    .then(({ refreshToken, ...account }) => {
-      // add new refresh token to cookie
-      setTokenCookie(res, refreshToken);
-      res.json(account);
-    })
-    .catch(next);
+    const token = req.cookies.refreshToken;
+    const ipAddress = req.ip;
+    accountService.refreshToken({ token, ipAddress })
+        .then(({ refreshToken, ...account }) => {
+            setTokenCookie(res, refreshToken);
+            res.json(account);
+        })
+        .catch(next);
 }
 
 function revokeTokenSchema(req, res, next) {
-  const schema = Joi.object({
-    token: Joi.string().optional(""),
-  });
-  validateRequest(req, next, schema);
-} 
+    const schema = Joi.object({
+        token: Joi.string().empty('')
+    });
+    validateRequest(req, next, schema);
+}
 
 function revokeToken(req, res, next) {
-  const token = req.body.token || req.cookies.refreshToken;
-  const ipAddress = req.ip;
-  if (!token) return res.status(400).json({ msg: "Token is expired" });
+    // accept token from request body or cookie
+    const token = req.body.token || req.cookies.refreshToken;
+    const ipAddress = req.ip;
 
-  if (!req.user.ownsToken(token) && req.user.role !== Role.Admin) {
-    return res.status(401).json({ msg: "Unathorized" });
-  }
+    if (!token) return res.status(400).json({ message: 'Token is required' });
 
-  accountService
-    .revokeToken({ token, ipAddress })
-    .then((_) =>{
-      // remove refresh token from cookie
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
-      });
-      res.json({ msg: "Token revoked" })
-    })
-    .catch(next);
+    // users can revoke their own tokens and admins can revoke any tokens
+    if (!req.user.ownsToken(token) && req.user.role !== Role.Admin) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    accountService.revokeToken({ token, ipAddress })
+        .then(() => res.json({ message: 'Token revoked' }))
+        .catch(next);
 }
 
 // function registerSchema(req, res, next) {
