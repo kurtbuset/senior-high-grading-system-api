@@ -91,16 +91,17 @@ module.exports = async (sequelize) => {
     { code: 'CP 2', name: 'Computer Programming 2', type: 'Specialized - TVL - ICT' },
     { code: 'CP 3', name: 'Computer Programming 3', type: 'Specialized - TVL - ICT' },
     { code: 'CP 4', name: 'Computer Programming 4', type: 'Specialized - TVL - ICT' },
-  ];
+  ];  
+  
+ for (const subject of subjects) {  
+    await Subject.findOrCreate({
+      where: { code: subject.code, type: subject.type },
+      defaults: subject,      
+    });
+  }
 
-  // for (const subject of subjects) {
-  //   await Subject.findOrCreate({
-  //     where: { code: subject.code }, // ensure uniqueness by code
-  //     defaults: subject,
-  //   });  
-  // }
+  const count = await Subject.count();
+  console.log(`✅ Subjects seeded successfully! Total: ${count} subjects.`);
 
-  await Subject.bulkCreate(subjects);
-
-  console.log('✅ Subjects seeded (duplicates skipped)!');
 };
+  

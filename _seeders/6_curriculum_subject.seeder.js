@@ -57,7 +57,7 @@ module.exports = async (sequelize) => {
     const records = [];
 
     for (const [strandKey, levels] of Object.entries(subjectMap)) {
-      for (const [gradeLevel, semesters] of Object.entries(levels)) { 
+      for (const [gradeLevel, semesters] of Object.entries(levels)) {
         for (const [semester, subjects] of Object.entries(semesters)) {
           for (const subject_id of subjects) {
             records.push({
@@ -70,10 +70,30 @@ module.exports = async (sequelize) => {
           }
         }
       }
-    } 
+    }
 
-    await CurriculumSubject.bulkCreate(records, { ignoreDuplicates: true });
-    console.log("✅ Curriculum subjects seeded!");
+    // ✅ Avoid duplicates by checking for existing entries
+    const uniqueRecords = [];
+    for (const record of records) {
+      const exists = await CurriculumSubject.findOne({
+        where: {
+          subject_id: record.subject_id,
+          grade_level_id: record.grade_level_id,
+          strand_id: record.strand_id,
+          semester: record.semester,
+          school_year_id: record.school_year_id,
+        },
+      });
+
+      if (!exists) uniqueRecords.push(record);
+    }
+
+    if (uniqueRecords.length > 0) {
+      await CurriculumSubject.bulkCreate(uniqueRecords);
+    }
+
+    const total = await CurriculumSubject.count();
+    console.log(`✅ Curriculum subjects seeded successfully! Total records: ${total}`);
   } catch (error) {
     console.error("❌ Curriculum subjects seeding failed:", error);
   }

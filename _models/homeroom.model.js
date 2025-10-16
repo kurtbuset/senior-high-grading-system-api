@@ -41,6 +41,12 @@ function model(sequelize) {
 
   const options = {
     timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["grade_level_id", "strand_id", "school_year_id", "section"],
+      },
+    ],
   };
 
   return sequelize.define("homeroom", attributes, options);
