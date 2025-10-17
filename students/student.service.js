@@ -13,7 +13,7 @@ async function getStudentInfo(accountId) {
   try {
     const student = await db.Student.findOne({
       where: { account_id: accountId },
-      attributes: ["school_id", "address", "lrn_number"], // student info
+      attributes: ["school_id"], // student info
       include: [
         {
           model: db.HomeRoom,

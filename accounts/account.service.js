@@ -199,10 +199,56 @@ async function getAllTeachers() {
 }
 
 
+// async function getById(id) {
+//   const account = await getAccount(id)
+//   return basicDetails(account)
+// } 
+
 async function getById(id) {
-  const account = await getAccount(id)
-  return basicDetails(account)
-} 
+  const account = await getAccount(id);
+  let result = basicDetails(account);
+
+  if (account.role === 'Student') {
+    // include student + homeroom info with proper include syntax
+    const student = await db.Student.findOne({
+      where: { account_id: id },
+      include: [
+        {
+          model: db.HomeRoom,
+          as: 'homeroom',
+          include: [
+            { model: db.Grade_Level, as: 'grade_level' },
+            { model: db.Strand, as: 'strand' }
+          ]
+        }
+      ]
+    });
+
+    if (student) {
+      result = {
+        ...result,
+        school_id: student.school_id,
+        sex: student.sex,
+        homeroom: student.homeroom
+          ? {
+              id: student.homeroom.id,
+              section: student.homeroom.section,
+              grade_level: student.homeroom.grade_level
+                ? student.homeroom.grade_level.level
+                : null,
+              strand: student.homeroom.strand
+                ? student.homeroom.strand.code
+                : null
+            }
+          : null
+      };
+    }
+  }
+
+  return result;
+}
+
+
 
 async function create(params) {
   if(await db.Account.findOne({ where: { email: params.email }})){

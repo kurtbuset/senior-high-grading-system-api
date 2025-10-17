@@ -260,7 +260,7 @@ async function getHomerooms(role, accountId) {
       {
         model: db.Strand,
         as: "strand",
-        attributes: ["name"],
+        attributes: ["code"],
       },
       {
         model: db.School_Year,
@@ -276,7 +276,7 @@ async function getHomerooms(role, accountId) {
     id: h.id,
     grade_level: h.grade_level.level,
     section: h.section,
-    strand: h.strand.name,
+    strand: h.strand.code,
     school_year: h.school_year.school_year,
   }));
 }
