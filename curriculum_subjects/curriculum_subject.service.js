@@ -4,7 +4,33 @@ module.exports = {
   create,
   getFilteredSubjects,
   setSubjects,
+  deleteCurriculumSubject
 };
+
+async function deleteCurriculumSubject(curriculumSubjectId) {
+  // Check if this curriculum_subject is assigned to any teacher
+  const assigned = await db.Teacher_Subject_Assignment.findOne({
+    where: { curriculum_subject_id: curriculumSubjectId },
+  });
+
+  if (assigned) {
+    throw `Cannot delete: curriculum subject is assigned to a teacher.`;
+  }
+
+  // Delete the curriculum_subject
+  const deleted = await db.Curriculum_Subject.destroy({
+    where: { id: curriculumSubjectId },
+  });
+
+  if (!deleted) {
+    throw `Curriculum subject with id ${curriculumSubjectId} not found`;
+  }
+
+  console.log(`✅ Deleted curriculum_subject ${curriculumSubjectId}`);
+  return;
+}
+
+
 
 async function setSubjects(subjectsArray) {
   if (!Array.isArray(subjectsArray) || subjectsArray.length === 0) {
@@ -69,22 +95,21 @@ async function setSubjects(subjectsArray) {
   return createdSubjects;
 }
 
-async function getFilteredSubjects({
-  grade_level,
-  strand,
-  semester,
-  school_year,
-}) {
+async function getFilteredSubjects({ grade_level, strand, semester, school_year }) {
   // If no filters, return ALL subjects
   if (!grade_level && !strand && !semester && !school_year) {
-    return db.Subject.findAll(); // plain list of all subjects
+    // Map all subjects with curriculum_subject id = null
+    const allSubjects = await db.Subject.findAll();
+    return allSubjects.map((s) => ({
+      id: null, // no curriculum_subject yet
+      code: s.code,
+      name: s.name,
+      type: s.type,
+    }));
   }
 
   const where = {};
-
-  if (semester) {
-    where.semester = semester;
-  }
+  if (semester) where.semester = semester;
 
   const include = [
     { model: db.Subject, as: "subject" },
@@ -93,30 +118,24 @@ async function getFilteredSubjects({
     { model: db.School_Year, as: "school_year" },
   ];
 
-  // Apply grade_level filter (match by level)
-  if (grade_level) {
-    include[1].where = { level: grade_level };
-  }
-
-  // Apply strand filter (match by code)
-  if (strand) {
-    include[2].where = { code: strand };
-  }
-
-  // Apply school_year filter (match by school_year string)
-  if (school_year) {
-    include[3].where = { school_year };
-  }
+  if (grade_level) include[1].where = { level: grade_level };
+  if (strand) include[2].where = { code: strand };
+  if (school_year) include[3].where = { school_year };
 
   const results = await db.Curriculum_Subject.findAll({
     where,
     include,
   });
 
-  console.log(JSON.stringify(results, null, 2));
-  // Map only to subject info
-  return results.map((cs) => cs.subject);
+  // Return curriculum_subject id along with subject info
+  return results.map((cs) => ({
+    id: cs.id, // curriculum_subject id
+    code: cs.subject.code,
+    name: cs.subject.name,
+    type: cs.subject.type,
+  }));
 }
+
 
 async function create(params) {
   // check subject

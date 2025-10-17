@@ -9,9 +9,16 @@ const validateRequest = require("../_middleware/validate-request");
 router.get('/filtered', authorize(Role.Principal), getFilteredSubjects)
 router.post('/', authorize(Role.Principal), createSchema, create)
 router.post('/set-subject', authorize(Role.Principal), setSubjects)
-
+router.delete('/:id', authorize(Role.Principal), deleteCurriculumSubject)
 
 module.exports = router;
+
+function deleteCurriculumSubject(req, res, next){
+  curriculumSubjectService
+   .deleteCurriculumSubject(req.params.id)
+   .then(() => res.json({ message: 'Curriculum Subject deleted successfully' }))
+  .catch(next);
+}
 
 function setSubjects(req, res, next) {
   curriculumSubjectService
