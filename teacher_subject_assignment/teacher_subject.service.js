@@ -5,7 +5,7 @@ module.exports = {
   getSubjectsByTeacherId,
   getOneSubject,
   updatePercentages,
-  saveAssignment
+  saveAssignment,
 };
 
 async function updatePercentages(teacher_subject_id, value) {
@@ -48,7 +48,6 @@ function formatSubjectAssignment(x) {
   };
 }
 
-
 async function getOneSubject(id) {
   const subject = await db.Teacher_Subject_Assignment.findOne({
     where: { id },
@@ -58,7 +57,7 @@ async function getOneSubject(id) {
         as: "curriculum_subject",
         attributes: ["subject_id", "semester"],
         include: [
-          { 
+          {
             model: db.Subject,
             as: "subject", // must match your association alias
             attributes: ["name"],
@@ -75,12 +74,12 @@ async function getOneSubject(id) {
         as: "homeroom",
         attributes: ["section", "grade_level_id"],
         include: [
-          { 
+          {
             model: db.Grade_Level,
             as: "grade_level", // must match your association alias
             attributes: ["level"],
-          }
-        ]
+          },
+        ],
       },
     ],
   });
@@ -117,23 +116,23 @@ async function getSubjectsByTeacherId(teacher_id) {
         as: "homeroom",
         attributes: ["section", "grade_level_id"],
         include: [
-          { 
+          {
             model: db.Grade_Level,
             as: "grade_level", // must match your association alias
             attributes: ["level"],
-          }
-        ]
+          },
+        ],
       },
     ],
   });
 
   // console.log(JSON.stringify(assignments, null, 2))
 
-  return assignments.map(a => formatSubjectAssignment(a));
+  return assignments.map((a) => formatSubjectAssignment(a));
 }
 
 async function saveAssignment(params) {
-  console.log(params)
+  console.log(params);
   // 1️⃣ Validate teacher
   const teacher = await db.Account.findByPk(params.teacher_id);
   if (!teacher || teacher.role !== "Teacher") {
@@ -179,21 +178,33 @@ async function saveAssignment(params) {
     throw `The sum of WW, PT, and QA percentages must not exceed 100.`;
   }
 
-  let teacherSubject;
-
   // 7️⃣ Handle assign or update logic
   if (params.action === "assign") {
     if (existing) {
       throw `This subject is already assigned to the homeroom (id: ${params.homeroom_id}).`;
     }
 
-    teacherSubject = await db.Teacher_Subject_Assignment.create({
+    // 🧩 Fetch subject type
+    const subject = await db.Subject.findByPk(curriculumSubject.subject_id);
+    if (!subject) {
+      throw `Subject not found for curriculum subject id ${params.curriculum_subject_id}.`;
+    }
+
+    // 🧮 Set default percentages based on subject type
+    let ww = 25;
+    let pt = subject.type === "Core" ? 50 : 45;
+    let qa = subject.type === "Core" ? 25 : 30;
+
+    console.log(subject.type);
+
+    // Create assignment
+    const teacherSubject = await db.Teacher_Subject_Assignment.create({
       curriculum_subject_id: params.curriculum_subject_id,
       homeroom_id: params.homeroom_id,
       teacher_id: params.teacher_id,
-      custom_ww_percent: 25,
-      custom_pt_percent: 50,
-      custom_qa_percent: 25,
+      custom_ww_percent: ww,
+      custom_pt_percent: pt,
+      custom_qa_percent: qa,
     });
 
     // Auto-enroll students in that homeroom
@@ -218,26 +229,9 @@ async function saveAssignment(params) {
     };
   }
 
-  // 8️⃣ If action === "update"
-  if (params.action === "update") {
-    if (!existing) {
-      throw `No existing assignment found for this subject and homeroom.`;
-    }
-
-    // Update teacher
-    existing.teacher_id = params.teacher_id;
-    await existing.save();
-
-    return {
-      message: "Teacher successfully updated for this subject.",
-      teacherSubject: basicDetails(existing),
-    };
-  }
-
   // 9️⃣ Invalid action
   throw `Invalid action type. Use 'assign' or 'update'.`;
 }
-
 
 function basicDetails(teacherSubject) {
   const {
@@ -261,6 +255,3 @@ function basicDetails(teacherSubject) {
     custom_qa_percent,
   };
 }
-
-
-
