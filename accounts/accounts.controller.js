@@ -13,21 +13,30 @@ router.post("/revoke-token", authorize(), revokeTokenSchema, revokeToken);
 // router.post("/register", registerSchema, register);
 router.post("/verify-email", verifyEmailSchema, verifyEmail);
 router.post("/forgot-password", forgotPasswordSchema, forgotPassword);
-router.post("/validate-reset-token", validateResetTokenSchema, validateResetToken); 
+router.post(
+  "/validate-reset-token",
+  validateResetTokenSchema,
+  validateResetToken
+);
 router.post("/reset-password", resetPasswordSchema, resetPassword);
 
-router.get("/", authorize(Role.SuperAdmin), getAll);     
-router.get("/teachers", authorize(), getAllTeachers)
+router.get("/", authorize(Role.SuperAdmin), getAll);
+router.get("/teachers", authorize(), getAllTeachers);
 router.get("/:id", authorize(Role.SuperAdmin), getById);
 router.post("/", authorize(Role.SuperAdmin), createSchema, create);
-router.put("/update-password/:id", authorize(), updatePasswordSchema, updatePassword);
-router.put('/:id', authorize(), updateSchema, update);
+router.put(
+  "/update-password/:id",
+  authorize(),
+  updatePasswordSchema,
+  updatePassword
+);
+router.put("/:id", authorize(), updateSchema, update);
 router.delete("/:id", authorize(), _delete);
 
 module.exports = router;
-  
-function getAllTeachers(req, res, next){
-   accountService
+
+function getAllTeachers(req, res, next) {
+  accountService
     .getAllTeachers()
     .then((teachers) => res.json(teachers))
     .catch(next);
@@ -54,42 +63,48 @@ function authenticate(req, res, next) {
 }
 
 function refreshToken(req, res, next) {
-    const token = req.cookies.refreshToken;
-    const ipAddress = req.ip;
-    accountService.refreshToken({ token, ipAddress })
-        .then(({ refreshToken, ...account }) => {
-            setTokenCookie(res, refreshToken);
-            res.json(account);
-        })
-        .catch(next);
+  const token = req.cookies.refreshToken;
+  const ipAddress = req.ip;
+  accountService
+    .refreshToken({ token, ipAddress })
+    .then(({ refreshToken, ...account }) => {
+      setTokenCookie(res, refreshToken);
+      res.json(account);
+    })
+    .catch(next);
 }
 
 function revokeTokenSchema(req, res, next) {
-    const schema = Joi.object({
-        token: Joi.string().empty('')
-    });
-    validateRequest(req, next, schema);
+  const schema = Joi.object({
+    token: Joi.string().empty(""),
+  });
+  validateRequest(req, next, schema);
 }
 
 function revokeToken(req, res, next) {
-    // accept token from request body or cookie
-    const token = req.body.token || req.cookies.refreshToken;
-    const ipAddress = req.ip;
+  // accept token from request body or cookie
+  const token = req.body.token || req.cookies.refreshToken;
+  const ipAddress = req.ip;
 
-    if (!token) return res.status(400).json({ message: 'Token is required' });
+  if (!token) return res.status(400).json({ message: "Token is required" });
 
-    // users can revoke their own tokens and admins can revoke any tokens
-    if (!req.user.ownsToken(token) && req.user.role !== Role.SuperAdmin) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
+  // users can revoke their own tokens and admins can revoke any tokens
+  if (!req.user.ownsToken(token) && req.user.role !== Role.SuperAdmin) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-    accountService.revokeToken({ token, ipAddress })
-        .then(() => {
-          // remove refresh token from cookie
-          res.clearCookie('refreshToken');
-          res.json({ msg: "Token revoked" })
-        })
-        .catch(next);
+  accountService
+    .revokeToken({ token, ipAddress })
+    .then(() => {
+      // remove refresh token from cookie
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      });
+      res.json({ msg: "Token revoked" });
+    })
+    .catch(next);
 }
 
 // function registerSchema(req, res, next) {
@@ -185,7 +200,10 @@ function getAll(req, res, next) {
 }
 
 function getById(req, res, next) {
-  if (Number(req.params.id) !== req.user.id && req.user.role !== Role.SuperAdmin) {
+  if (
+    Number(req.params.id) !== req.user.id &&
+    req.user.role !== Role.SuperAdmin
+  ) {
     return res.status(401).json({ msg: "Unauthorized" });
   }
 
@@ -198,21 +216,23 @@ function getById(req, res, next) {
 function createSchema(req, res, next) {
   const schema = Joi.object({
     firstName: Joi.string().required(),
-    lastName: Joi.string().required(),  
+    lastName: Joi.string().required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    role: Joi.string().valid(Role.SuperAdmin, Role.Registrar, Role.Principal, Role.Teacher).required()
+    role: Joi.string()
+      .valid(Role.SuperAdmin, Role.Registrar, Role.Principal, Role.Teacher)
+      .required(),
   });
   validateRequest(req, next, schema);
 }
 
 function create(req, res, next) {
-  accountService  
+  accountService
     .create(req.body)
     .then((account) => res.json(account))
     .catch(next);
-} 
+}
 
 function updatePasswordSchema(req, res, next) {
   const schemaRules = {
@@ -220,47 +240,57 @@ function updatePasswordSchema(req, res, next) {
     confirmPassword: Joi.string().valid(Joi.ref("password")).empty(""),
   };
 
-
   const schema = Joi.object(schemaRules).with("password", "confirmPassword");
   validateRequest(req, next, schema);
 }
 
-function updatePassword(req, res, next) { 
+function updatePassword(req, res, next) {
   accountService
     .update(req.params.id, req.body)
     .then((account) => res.json(account))
     .catch(next);
 }
 
-
 function updateSchema(req, res, next) {
-    const schemaRules = {
-        firstName: Joi.string().empty(''),
-        lastName: Joi.string().empty(''),
-        email: Joi.string().email().empty(''),
-        isActive: Joi.boolean(),
-        password: Joi.string().min(6).empty(''),
-        confirmPassword: Joi.string().valid(Joi.ref('password')).empty('')
-    };
+  const schemaRules = {
+    firstName: Joi.string().empty(""),
+    lastName: Joi.string().empty(""),
+    email: Joi.string().email().empty(""),
+    isActive: Joi.boolean(),
+    password: Joi.string().min(6).empty(""),
+    confirmPassword: Joi.string().valid(Joi.ref("password")).empty(""),
+  };
 
-    // only admins can update role
-    if (req.user.role === Role.SuperAdmin) {
-        schemaRules.role = Joi.string().valid(Role.SuperAdmin, Role.Teacher, Role.Principal, Role.Registrar, Role.Student).empty('');
-    }
+  // only admins can update role
+  if (req.user.role === Role.SuperAdmin) {
+    schemaRules.role = Joi.string()
+      .valid(
+        Role.SuperAdmin,
+        Role.Teacher,
+        Role.Principal,
+        Role.Registrar,
+        Role.Student
+      )
+      .empty("");
+  }
 
-    const schema = Joi.object(schemaRules).with('password', 'confirmPassword');
-    validateRequest(req, next, schema);
+  const schema = Joi.object(schemaRules).with("password", "confirmPassword");
+  validateRequest(req, next, schema);
 }
 
 function update(req, res, next) {
-    // users can update their own account and admins can update any account
-    if (Number(req.params.id) !== req.user.id && req.user.role !== Role.SuperAdmin) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
+  // users can update their own account and admins can update any account
+  if (
+    Number(req.params.id) !== req.user.id &&
+    req.user.role !== Role.SuperAdmin
+  ) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-    accountService.update(req.params.id, req.body)
-        .then(account => res.json(account))
-        .catch(next);
+  accountService
+    .update(req.params.id, req.body)
+    .then((account) => res.json(account))
+    .catch(next);
 }
 
 function _delete(req, res, next) {
@@ -281,8 +311,8 @@ function setTokenCookie(res, token) {
   const cookieOptions = {
     httpOnly: true,
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    secure: process.env.NODE_ENV === 'production', // true only in prod
-    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
+    secure: process.env.NODE_ENV === "production", // true only in prod
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
   };
   res.cookie("refreshToken", token, cookieOptions);
 }
