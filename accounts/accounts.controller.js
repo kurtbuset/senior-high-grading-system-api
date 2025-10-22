@@ -99,8 +99,8 @@ function revokeToken(req, res, next) {
       // remove refresh token from cookie
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        secure: true,
+        sameSite: "None" 
       });
       res.json({ msg: "Token revoked" });
     })
