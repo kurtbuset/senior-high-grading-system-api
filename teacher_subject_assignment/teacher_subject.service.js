@@ -190,10 +190,12 @@ async function saveAssignment(params) {
       throw `Subject not found for curriculum subject id ${params.curriculum_subject_id}.`;
     }
 
-    // 🧮 Set default percentages based on subject type
-    let ww = 25;
-    let pt = subject.type === "Core" ? 50 : 45;
-    let qa = subject.type === "Core" ? 25 : 30;
+    const defaultPercents = {
+      "Core Subject (All Track)": { ww: 25, pt: 50, qa: 25 },
+      "Academic Track (except Immersion)": { ww: 25, pt: 45, qa: 30 },
+    };
+
+    const { ww, pt, qa } = defaultPercents[subject.type] || { ww: 25, pt: 50, qa: 25 };
 
     console.log(subject.type);
 
@@ -217,7 +219,7 @@ async function saveAssignment(params) {
       const enrollment = await db.Enrollment.create({
         student_id: student.id,
         teacher_subject_id: teacherSubject.id,
-        is_enrolled: false,
+        is_enrolled: true,
       });
       enrollments.push(enrollment);
     }

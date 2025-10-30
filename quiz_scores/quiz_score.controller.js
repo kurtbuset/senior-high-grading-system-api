@@ -10,14 +10,24 @@ router.get('/:id', authorize(Role.Teacher), getStudentsWithScores)
 router.get('/', authorize(Role.Teacher), getStudentsWithoutScores)
 router.put('/update', authorize(Role.Teacher), updateRawScoreSchema, updateRawScore)
 router.post('/', authorize(Role.Teacher), addRawScoreSchema, addRawScore)
+router.get('/student-raw-scores/:id', authorize(Role.Teacher), getStudentsAndRawScores)
 
 module.exports = router
+
+function getStudentsAndRawScores(req, res, next){
+  quizScoreService
+    .getStudentsAndRawScores(req.params.id)
+    .then((students) => {
+      res.json(students);
+    })
+    .catch(next);
+}
 
 function updateRawScoreSchema(req, res, next){
    const schema = Joi.array().items(
     Joi.object({
       quiz_id: Joi.number().required(),
-      enrollment_id: Joi.number().required(),
+      enrollment_id: Joi.number().required(), 
       raw_score: Joi.number().min(0).required()
     })
   )

@@ -29,7 +29,7 @@ const runSeeds = async () => {
     // const homeroomSeed = require("./_seeders/7_homeroom.seeder");
 
     // 3. Run seeds sequentially (pass sequelize!)
-    await accountsSeed(sequelize);
+    await accountsSeed(sequelize);  
     await gradeLevelSeed(sequelize);
     await schoolYearSeed(sequelize);
     await strandSeed(sequelize);

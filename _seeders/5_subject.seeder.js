@@ -6,96 +6,75 @@ module.exports = async (sequelize) => {
   await Subject.sync(); // Ensure table exists
 
   const subjects = [
-    // CORE SUBJECTS
-    { code: 'ENGL1', name: 'Oral Communication', type: 'Core' },
-    { code: 'ENGL2', name: 'Academic Reading and Writing', type: 'Core' },
-    { code: 'FIL1', name: 'Komunikasyon at Pananaliksik sa Wika at Kulturang Pilipino', type: 'Core' },
-    { code: 'FIL2', name: 'Pagbasa at Pagsusuri ng Ibat-Ibang Teksto Tungo sa Pananaliksik', type: 'Core' },
-    { code: 'MATH1', name: 'General Mathematics', type: 'Core' },
-    { code: 'MATH2', name: 'Statistics and Probability', type: 'Core' },
-    { code: 'SCI 1A', name: 'Earth and Life Science', type: 'Core' },
-    { code: 'SCI 1B', name: 'Earth Science', type: 'Core' },
-    { code: 'SCI2', name: 'Physical Science', type: 'Core' },
-    { code: 'LIT', name: '21st Century Literature from the Philippines and the World', type: 'Core' },
-    { code: 'CAR', name: 'Contemporary Philippine Arts from the Regions', type: 'Core' },
-    { code: 'MIL', name: 'Media and Information Literacy', type: 'Core' },
-    { code: 'DRRR', name: 'Disaster Readiness and Risk Reduction', type: 'Core' },
-    { code: 'PPT', name: 'Introduction to the Philosophy of the Human Person', type: 'Core' },
-    { code: 'PER DEV', name: 'Personal Development', type: 'Core' },
-    { code: 'UCS', name: 'Understanding Culture, Society and Politics', type: 'Core' }, 
-    { code: 'PE1', name: 'Physical Education and Health 1', type: 'Core' },
-    { code: 'PE2', name: 'Physical Education and Health 2', type: 'Core' },
-    { code: 'PE3', name: 'Physical Education and Health 3', type: 'Core' },
-    { code: 'PE4', name: 'Physical Education and Health 4', type: 'Core' },
+    // 25, 50, 25
+    { code: ' ', name: 'Oral Communication', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Reading and Writing', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Komunikasyon at Pananaliksik sa Wika at Kulturang Pilipino', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Pagbasa at Pagsusuri ng Ibat-Ibang Teksto Tungo sa Pananaliksik', type: 'Core Subject (All Track)' },
+    { code: ' ', name: '21st Century Literature from the Philippines and the World', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Contemporary Philippine Arts from he Regions', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Introduction to the Philosophy of the Human Person', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Understanding Culture, Society and Politics', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Media and Information Literacy', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'General Mathematics', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Statistics and Probability', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Earth and Life Science', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Physical Science', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'Personal Development / Pansariling Kaunlaran', type: 'Core Subject (All Track)' },
+    { code: ' ', name: 'PE and Health', type: 'Core Subject (All Track)' },
 
-    // APPLIED SUBJECTS
-    { code: 'EAPP', name: 'English for Academic and Professional Purposes', type: 'Applied' },
-    { code: 'RES 1', name: 'Practical Research 1', type: 'Applied' },
-    { code: 'RES 2', name: 'Practical Research 2', type: 'Applied' },
-    { code: 'FIL 3A', name: 'Filipino sa Piling Larangan (Akademik)', type: 'Applied' },
-    { code: 'FIL 3B', name: 'Filipino sa Piling Larangan (TVL)', type: 'Applied' },
-    { code: 'E-TECH', name: 'Empowerment Technologies', type: 'Applied' },
-    { code: 'ENTREP', name: 'Entrepreneurship', type: 'Applied' },
-    { code: '3I', name: 'Inquiries, Investigations, and Immersion', type: 'Applied' },
+    // 25. 45, 30
+    { code: ' ', name: 'English for Academic and Professional Purposes - ACADEMIC', type: 'Academic Track (except Immersion)' },  
+    { code: ' ', name: 'Entrepreneurship - ACADEMIC', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Practical Research 1 - ACADEMIC', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Pagsulat sa Filipino sa Piling Larangan - ACADEMIC', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Empowerment Technologies (E-Tech): ICT fpr Professional Tracks - ACADEMIC', type: 'Academic Track (except Immersion)' }, 
+    { code: ' ', name: 'Practical Research 2 - ACADEMIC', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Research Project/Culminating Activity - ACADEMIC', type: 'Academic Track (except Immersion)' }, 
+    // STEM
+    { code: ' ', name: 'Earth Science', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Basic Calculus', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'General Biology 1', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'General Biology 2', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'General Chemistry 1', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'General Chemistry 2', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'General Physics 1', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'General Physics 2', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Pre-Calculus', type: 'Academic Track (except Immersion)' },
+    // ABM
+    { code: ' ', name: 'Applied Economics', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Business Ethics and Social Responsibility', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Fundamentals of Accountancy, Business, and Management 1', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Fundamentals of Accountancy, Business, and Management 2', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Business Math', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Business Finance', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Organization and Management', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Principles of Marketing', type: 'Academic Track (except Immersion)' },
+    // HUMMS
+    { code: ' ', name: 'Creative Nonfiction', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Creative Writing/Malikhaing Pagsulat', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Introduction to World Religions and Belief Systems', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Trends, Networks, and Critical Thinking in the 21st Century Culture', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Community Engagement, Solidarity and Citizenship', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Discipline and Ideas in the Applied Sciences', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Discipline and Ideas in the Social Sciences', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Philippine Politics and Governance', type: 'Academic Track (except Immersion)' },
+    // GAS
+    { code: ' ', name: 'Disaster Readiness and Risk Reduction', type: 'Academic Track (except Immersion)' },
+    { code: ' ', name: 'Organization  and Management', type: 'Academic Track (except Immersion)' },
+    // { code: ' ', name: '', type: 'subjectType2' },
 
-    // SPECIALIZED SUBJECT GAS
-    { code: 'AE', name: 'Applied Economics', type: 'Specialized - GAS' },
-    { code: 'DRRR', name: 'Disaster Readiness and Risk Reduction', type: 'Specialized - GAS' },
-    { code: 'DIASS', name: 'Discipline and Ideas in the Applied Social Sciences', type: 'Specialized - GAS' },
-    { code: 'DISS', name: 'Disciplines and Ideas in the Social Sciences', type: 'Specialized - GAS' },
-    { code: 'WRB', name: 'Introduction to World Religions and Belief Systems', type: 'Specialized - GAS' },
-    { code: 'OM', name: 'Organization and Management', type: 'Specialized - GAS' },
-    { code: 'PG', name: 'Philippine Politics and Governance', type: 'Specialized - GAS' },
-    { code: 'TNCT', name: 'Trends, Networks and Critical Thinking in the 21st Century Cultures', type: 'Specialized - GAS' },
-    { code: 'WIMM', name: 'Work Immersion', type: 'Specialized - GAS' },
+    // 35, 40, 25
+    
 
-    // SPECIALIZED SUBJECT ABM
-    { code: 'AE', name: 'Applied Economics', type: 'Specialized - ABM' },
-    { code: 'ESR', name: 'Business Ethics & Social Responsibility', type: 'Specialized - ABM' },
-    { code: 'FABM1', name: 'Fundamentals of ABM 1', type: 'Specialized - ABM' },
-    { code: 'FABM2', name: 'Fundamentals of ABM 2', type: 'Specialized - ABM' },
-    { code: 'BM', name: 'Business Mathematics', type: 'Specialized - ABM' },  
-    { code: 'BF', name: 'Business Finance', type: 'Specialized - ABM' },
-    { code: 'OM', name: 'Organization and Management', type: 'Specialized - ABM' },
-    { code: 'PM', name: 'Principles of Marketing', type: 'Specialized - ABM' },
-    { code: 'WIMM', name: 'Work Immersion', type: 'Specialized - ABM' },
 
-    // SPECIALIZED SUBJECT HUMMS
-    { code: 'CSC', name: 'Community Engagements, Solidarity & Citizenship', type: 'Specialized - HUMMS' },
-    { code: 'CNF', name: 'Creative Nonfiction', type: 'Specialized - HUMMS' },
-    { code: 'CW', name: 'Creative Writing', type: 'Specialized - HUMMS' },
-    { code: 'DIASS', name: 'Discipline and Ideas in the Applied Sciences', type: 'Specialized - HUMMS' },
-    { code: 'DISS', name: 'Discipline and Ideas in the Social Sciences', type: 'Specialized - HUMMS' },
-    { code: 'WRB', name: 'Introduction to World Religions and Beliefs Systems', type: 'Specialized - HUMMS' },
-    { code: 'PG', name: 'Philippine Politics and Governance', type: 'Specialized - HUMMS' },
-    { code: 'TNCT', name: 'Trends, Networks and Critical Thinking in the 21st Century Culture', type: 'Specialized - HUMMS' },
-    { code: 'WIMM', name: 'Work Immersion', type: 'Specialized - HUMMS' },
-
-    // SPECIALIZED SUBJECT STEM
-    { code: 'PRECAL', name: 'Pre-Calculus', type: 'Specialized - STEM' },
-    { code: 'SBCAL', name: 'Basic Calculus', type: 'Specialized - STEM' },
-    { code: 'SBIO 1', name: 'General Biology 1', type: 'Specialized - STEM' },
-    { code: 'SBIO 2', name: 'General Biology 2', type: 'Specialized - STEM' },
-    { code: 'SGP 1', name: 'General Physics 1', type: 'Specialized - STEM' }, 
-    { code: 'SGP 2', name: 'General Physics 2', type: 'Specialized - STEM' },
-    { code: 'SGC 1', name: 'General Chemistry 1', type: 'Specialized - STEM' },
-    { code: 'SGC 2', name: 'General Chemistry 2', type: 'Specialized - STEM' },
-    { code: 'WIMM', name: 'Work Immersion', type: 'Specialized - STEM' },
-
-    // SPECIALIZED SUBJECT TVL - ICT
-    { code: 'CSS 1', name: 'Computer System Servicing 1', type: 'Specialized - TVL - ICT' },
-    { code: 'CSS 2', name: 'Computer System Servicing 2', type: 'Specialized - TVL - ICT' },
-    { code: 'CSS 3', name: 'Computer System Servicing 3', type: 'Specialized - TVL - ICT' },
-    { code: 'CSS 4', name: 'Computer System Servicing 4', type: 'Specialized - TVL - ICT' },
-    { code: 'CP 1', name: 'Computer Programming 1', type: 'Specialized - TVL - ICT' },
-    { code: 'CP 2', name: 'Computer Programming 2', type: 'Specialized - TVL - ICT' },
-    { code: 'CP 3', name: 'Computer Programming 3', type: 'Specialized - TVL - ICT' },
-    { code: 'CP 4', name: 'Computer Programming 4', type: 'Specialized - TVL - ICT' },
+    // 20, 60, 20
+    
   ];  
   
  for (const subject of subjects) {  
     await Subject.findOrCreate({
-      where: { code: subject.code, type: subject.type },
+      where: { name: subject.name, type: subject.type },
       defaults: subject,      
     });
   }

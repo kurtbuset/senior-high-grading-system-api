@@ -5,7 +5,86 @@ module.exports = {
   getStudentsWithoutScores,
   getStudentsWithScores,
   updateRawScore,
+  getStudentsAndRawScores,
 };
+
+async function getStudentsAndRawScores(teacher_subject_id) {
+  try {
+    const quizzes = await db.Quiz.findAll({
+      where: { teacher_subject_id },
+      raw: true,
+    });
+
+    const quarters = ["First Quarter", "Second Quarter"];
+    const data = {};
+
+    for (const quarter of quarters) {
+      const quarterQuizzes = quizzes.filter((q) => q.quarter === quarter);
+      data[quarter] = {
+        writtenWorks: quarterQuizzes.filter((q) => q.type === "Written Work"),
+        performanceTasks: quarterQuizzes.filter(
+          (q) => q.type === "Performance Tasks"
+        ),
+        quarterlyAssessments: quarterQuizzes.filter(
+          (q) => q.type === "Quarterly Assesment"
+        ),
+      };
+    }
+
+    const enrollments = await db.Enrollment.findAll({
+      where: { teacher_subject_id },
+      include: [
+        {
+          model: db.Student,
+          as: "student",
+          include: [
+            {
+              model: db.Account,
+              as: undefined, // no alias since you didn’t define one
+              attributes: ["firstName", "lastName"],
+            },
+          ],
+        },
+      ],
+    });
+
+    const scores = await db.Quiz_Score.findAll({ raw: true });
+
+    const students = enrollments.map((enr) => {
+      const studentScores = {};
+      for (const score of scores.filter((s) => s.enrollment_id === enr.id)) {
+        studentScores[score.quiz_id] = score.raw_score;
+      }
+
+      return {
+        id: enr.student.id,
+        firstName: enr.student.account.firstName,
+        lastName: enr.student.account.lastName,
+        scores: studentScores,
+      };
+    });
+
+    // ✅ Sort by lastName, then firstName (both case-insensitive)
+    students.sort((a, b) => {
+      const lastNameA = a.lastName.toLowerCase();
+      const lastNameB = b.lastName.toLowerCase();
+      const firstNameA = a.firstName.toLowerCase();
+      const firstNameB = b.firstName.toLowerCase();
+
+      if (lastNameA < lastNameB) return -1;
+      if (lastNameA > lastNameB) return 1;
+      if (firstNameA < firstNameB) return -1;
+      if (firstNameA > firstNameB) return 1;
+      return 0;
+    });
+
+    console.log(students);
+    return { hps: data, students };
+  } catch (err) {
+    console.error("getStudentsAndRawScores error:", err);
+    throw err;
+  }
+}
 
 async function getStudentsWithScores(quiz_id) {
   const results = await db.Quiz_Score.findAll({
@@ -42,8 +121,6 @@ async function getStudentsWithScores(quiz_id) {
   console.log(JSON.stringify(students, null, 2));
   return students;
 }
-
-
 
 async function getStudentsWithoutScores({ teacher_subject_id, quiz_id }) {
   console.log({ teacher_subject_id, quiz_id }); // For debugging
@@ -84,7 +161,6 @@ async function getStudentsWithoutScores({ teacher_subject_id, quiz_id }) {
 
   return studentsWithoutScores;
 }
-
 
 async function addRawScore(params) {
   console.log(params);

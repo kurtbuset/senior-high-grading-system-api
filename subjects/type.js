@@ -1,10 +1,7 @@
 module.exports = {
-  Core: "Core",
-  Applied: "Applied",
-  Specialized_GAS: "Specialized - GAS",
-  Specialized_ABM: "Specialized - ABM",
-  Specialized_HUMMS: "Specialized - HUMMS",
-  Specialized_STEM: "Specialized - STEM",
-  Specialized_TVL_ICT: "Specialized TVL - ICT"
+  subjectType1: "Core Subject (All Track)",
+  subjectType2: "Academic Track (except Immersion)",
+  subjectType3: "Work Immersion / Culminating Activity (for Academic Track)",
+  subjectType4: "TVL / Sports / Arts and Design Track"
 }
 

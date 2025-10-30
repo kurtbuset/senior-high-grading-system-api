@@ -28,86 +28,96 @@ module.exports = async (sequelize) => {
       role: role.Registrar,
       created: new Date(),
     },
-    {
-      firstName: "Monica",
-      lastName: "Mendoza",
-      email: "monica@gmail.com",
-      passwordHash: await bcrypt.hash("monica123", 10),
-      isActive: 1,
-      verified: new Date(),
-      role: role.Teacher,
-      created: new Date(),
-    },
-    {
-      firstName: 'Xhara Joyce',
-      lastName: "Socorro",
-      email: "xhara@gmail.com",
-      passwordHash: await bcrypt.hash('xhara123', 10),
-      isActive: 1,
-      verified: new Date(),
-      role: role.Teacher,
-      created: new Date()
-    },
-    { 
-      firstName: 'Lutchie',
-      lastName: "Silva",
-      email: "luthie@gmail.com",
-      passwordHash: await bcrypt.hash('juvan123', 10),
-      isActive: 1,
-      verified: new Date(),
-      role: role.Teacher,
-      created: new Date()
-    },
-    { 
-      firstName: 'Krista',
-      lastName: "Mae",
-      email: "krista@gmail.com",
-      passwordHash: await bcrypt.hash('krista123', 10),
-      isActive: 1,
-      verified: new Date(),
-      role: role.Teacher,
-      created: new Date()
-    },
-    { 
-      firstName: 'Jessa',
-      lastName: "Manatad",
-      email: "jessa@gmail.com",
-      passwordHash: await bcrypt.hash('jessa123', 10),
-      isActive: 1,
-      verified: new Date(),
-      role: role.Teacher,
-      created: new Date()
-    },
-    { 
-      firstName: 'Nicasio',
-      lastName: "Balbontin",
-      email: "nicasio@gmail.com",
-      passwordHash: await bcrypt.hash('nicasio123', 10),
-      isActive: 1,
-      verified: new Date(),
-      role: role.Teacher,
-      created: new Date()
-    },
-    { 
-      firstName: 'Jay Ann',
-      lastName: "Lee",
-      email: "lee@gmail.com",
-      passwordHash: await bcrypt.hash('lee123', 10),
-      isActive: 1,
-      verified: new Date(),
-      role: role.Teacher,
-      created: new Date()
-    },
-    { 
-      firstName: 'Abegail',
-      lastName: "Adolfo",
-      email: "abegail@gmail.com",
-      passwordHash: await bcrypt.hash('abegail123', 10),
-      isActive: 1,
-      verified: new Date(),
-      role: role.Teacher,
-      created: new Date()
-    },
+    // {
+    //   firstName: "Yams",
+    //   lastName: "Lamelo",
+    //   email: "yams@gmail.com",
+    //   passwordHash: await bcrypt.hash("yams123", 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date(),
+    // },
+    // {
+    //   firstName: "Monica",
+    //   lastName: "Mendoza",
+    //   email: "monica@gmail.com",
+    //   passwordHash: await bcrypt.hash("monica123", 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date(),
+    // },
+    // {
+    //   firstName: 'Xhara Joyce',
+    //   lastName: "Socorro",
+    //   email: "xhara@gmail.com",
+    //   passwordHash: await bcrypt.hash('xhara123', 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date()
+    // },
+    // { 
+    //   firstName: 'Lutchie',
+    //   lastName: "Silva",
+    //   email: "luthie@gmail.com",
+    //   passwordHash: await bcrypt.hash('juvan123', 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date()
+    // },
+    // { 
+    //   firstName: 'Krista',
+    //   lastName: "Mae",
+    //   email: "krista@gmail.com",
+    //   passwordHash: await bcrypt.hash('krista123', 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date()
+    // },
+    // { 
+    //   firstName: 'Jessa',
+    //   lastName: "Manatad",
+    //   email: "jessa@gmail.com",
+    //   passwordHash: await bcrypt.hash('jessa123', 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date()
+    // },
+    // { 
+    //   firstName: 'Nicasio',
+    //   lastName: "Balbontin",
+    //   email: "nicasio@gmail.com",
+    //   passwordHash: await bcrypt.hash('nicasio123', 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date()
+    // },
+    // { 
+    //   firstName: 'Jay Ann',
+    //   lastName: "Lee",
+    //   email: "lee@gmail.com",
+    //   passwordHash: await bcrypt.hash('lee123', 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date()
+    // },
+    // { 
+    //   firstName: 'Abegail',
+    //   lastName: "Adolfo",
+    //   email: "abegail@gmail.com",
+    //   passwordHash: await bcrypt.hash('abegail123', 10),
+    //   isActive: 1,
+    //   verified: new Date(),
+    //   role: role.Teacher,
+    //   created: new Date()
+    // },
   ];
 
   for (const acc of accounts) {

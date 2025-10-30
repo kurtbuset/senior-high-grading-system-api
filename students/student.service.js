@@ -1,13 +1,49 @@
 const db = require("../_helpers/db");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
 const Role = require("../_helpers/role");
 
 module.exports = {
   create,
   getSubjectAndGrades,
   getStudentInfo,
+  getAllStudents,
 };
+
+async function getAllStudents() {
+  try {
+    const students = await db.Student.findAll({
+      attributes: ["school_id", "sex"], // student table columns
+      include: [
+        {
+          model: db.Account,
+          attributes: ["firstName", "lastName", "email"], // from account
+        },
+        {
+          model: db.HomeRoom,
+          as: "homeroom",
+          attributes: ["section"],
+          include: [
+            {
+              model: db.Grade_Level,
+              as: "grade_level",
+              attributes: ["level"], // grade_level.level
+            },
+            {
+              model: db.Strand,
+              as: "strand",
+              attributes: ["name"], // strand.name
+            },
+          ],
+        },
+      ],
+    });
+
+    return students;
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    throw error;
+  }
+}
 
 async function getStudentInfo(accountId) {
   try {
@@ -173,21 +209,21 @@ async function getSubjectAndGrades(account_id) {
           const grades = await db.Final_Grade.findAll({
             where: { enrollment_id: enrollment.id },
             attributes: ["quarter", "final_grade", "locked_at"],
-            order: [["locked_at", "DESC"]], // make sure newest are first 
+            order: [["locked_at", "DESC"]], // make sure newest are first
           });
 
           // group by quarter and take only the latest
           const latestGrades = {};
           for (const g of grades) {
             if (!latestGrades[g.quarter]) {
-              latestGrades[g.quarter] = g; // only take the first (newest) per quarter  
+              latestGrades[g.quarter] = g; // only take the first (newest) per quarter
             }
           }
 
           if (
             latestGrades["First Quarter"] &&
             latestGrades["First Quarter"].locked_at
-          ) { 
+          ) {
             firstQuarter = latestGrades["First Quarter"].final_grade;
           }
           if (
@@ -210,7 +246,8 @@ async function getSubjectAndGrades(account_id) {
         enrollmentId,
         firstQuarter,
         secondQuarter,
-        finalAverage: firstQuarter !== null && secondQuarter !== null
+        finalAverage:
+          firstQuarter !== null && secondQuarter !== null
             ? Math.round((firstQuarter + secondQuarter) / 2)
             : null,
       };
@@ -291,7 +328,7 @@ async function create(params) {
     const enrollment = await db.Enrollment.create({
       student_id: student.id,
       teacher_subject_id: assignment.id,
-      is_enrolled: false,
+      is_enrolled: true,
     });
     enrollments.push(enrollment);
   }
