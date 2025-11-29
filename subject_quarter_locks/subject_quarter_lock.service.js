@@ -9,59 +9,44 @@ const db = require("../_helpers/db");
 module.exports = {
   lockSubject,
   requestToUnlock,
-  updateSubjectStatus
-}
+  updateSubjectStatus,
+};
 
 async function updateSubjectStatus(id, { status, quarter }) {
-  console.log(id)
-  console.log(status)
+  console.log(id);
+  console.log(status);
   const record = await db.Subject_Quarter_Lock.findOne({
-    where: { teacher_subject_id: id, quarter  },
+    where: { teacher_subject_id: id, quarter },
   });
 
   if (!record) throw "Subject lock record not found";
 
   record.status = status;
-  record.reason_to_unlock = ''
+  record.reason_to_unlock = "";
   await record.save();
 
-  console.log(JSON.stringify(record, null, 2))
+  console.log(JSON.stringify(record, null, 2));
 
   return record;
 }
 
-
 async function requestToUnlock(teacher_subject_id, params) {
-  console.log("Teacher Subject ID:", teacher_subject_id);
-  console.log("Params:", params);
-
   const lock = await db.Subject_Quarter_Lock.findOne({
     where: {
       teacher_subject_id,
       quarter: params.quarter,
     },
-    include: [
-      {
-        model: db.Teacher_Subject_Assignment,
-        as: "assignment",
-        inclde: [{ model: db.Account, as: "teacher"}]
-      }
-    ]
   });
 
-  if (!lock) {
-    throw new Error("No lock record found for this subject and quarter.");
-  }
+  if (!lock) throw new Error("No lock record found.");
 
-  lock.status = "UNLOCKED";
+  lock.status = "PENDING";
+  lock.reason_to_unlock = params.reason_to_unlock;
 
   await lock.save();
 
   return lock;
 }
-
-
-
 
 async function lockSubject({ teacher_subject_id, quarter }) {
   // Check if a record already exists
@@ -71,7 +56,7 @@ async function lockSubject({ teacher_subject_id, quarter }) {
 
   if (lock) {
     // Update existing record
-    lock.status = 'LOCKED';
+    lock.status = "LOCKED";
     lock.lock_counts = (lock.lock_counts || 1) + 1;
     await lock.save();
   } else {
@@ -80,7 +65,7 @@ async function lockSubject({ teacher_subject_id, quarter }) {
       teacher_subject_id,
       quarter,
       lock_counts: 1,
-      status: 'LOCKED',
+      status: "LOCKED",
     });
   }
 

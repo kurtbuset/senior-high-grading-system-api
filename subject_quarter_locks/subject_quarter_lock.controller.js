@@ -18,7 +18,7 @@ function updateSubjectStatus(req, res, next){
     .then(_ => res.json({ msg: "record updated successfully"}))
     .catch(next)
 }
-
+  
 
 function requestToUnlock(req, res, next){
   subjectQuarterLockService

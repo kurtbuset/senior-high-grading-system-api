@@ -37,7 +37,7 @@ const runSeeds = async () => {
     // await curriculumSubjectSeed(sequelize);
     // await homeroomSeed(sequelize) 
 
-    console.log("🌱 All seeds executed successfully!");
+    console.log("🌱 All seeds executed successfully!"); 
   } catch (err) {
     console.error("❌ Seeding failed:", err);
   } finally {
