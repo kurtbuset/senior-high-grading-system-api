@@ -4,8 +4,6 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-RUN yarn global add nodemon
-
 # Copy package files
 COPY package*.json ./
 
@@ -19,4 +17,4 @@ COPY . .
 EXPOSE 4000
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

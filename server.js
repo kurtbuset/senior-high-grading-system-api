@@ -18,7 +18,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // production mode
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+console.log(`FRONTEND_URL env variable: ${frontendUrl}`);
+console.log(`Allowed CORS origins: ${frontendUrl}`);
+app.use(cors({ origin: frontendUrl, credentials: true }));
 
 // health check endpoint
 app.get("/health", (req, res) => {
@@ -60,13 +63,12 @@ app.use("/api-docs", require("./_helpers/swagger"));
 // global error handler
 app.use(errorHandler);
 
-const port =
-  process.env.NODE_ENV === "production" ? process.env.DB_PORT || 80 : 4000;
+const port = process.env.PORT || 4000;
 
 const server = http.createServer(app);
 init(server);
 
-server.listen(port, async () => {
+server.listen(port, "0.0.0.0", async () => {
   console.log(`LISTENING ON PORT ${port}`);
 
   try {
