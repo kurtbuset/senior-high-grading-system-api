@@ -1,41 +1,30 @@
-let io;
+let io
 
-function init(server) {
-  const { Server } = require("socket.io");
+function init(server){
+    const { Server } = require('socket.io')
+    io = new Server(server, {
+        cors: { origin: process.env.FRONTEND_URL, credentials: true }
+    })
 
-  const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    "http://localhost:5173",
-    "https://frontend-grado-production.up.railway.app",
-  ].filter(Boolean);
+    io.on('connection', (socket) => {
+        console.log('user connected: ', socket.id)
 
-  io = new Server(server, {
-    cors: {
-      origin: allowedOrigins,
-      credentials: true,
-      methods: ["GET", "POST"],
-    },
-  });
+        socket.on('join', (userId) => {
+            socket.join(userId)
+            console.log(`user ${userId} joined their room`)
+        })
 
-  io.on("connection", (socket) => {
-    console.log("user connected: ", socket.id);
+        socket.on('disconnect', () => {
+            console.log('user disconnected: ', socket.id)
+        })
+    })
 
-    socket.on("join", (userId) => {
-      socket.join(userId);
-      console.log(`user ${userId} joined their room`);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("user disconnected: ", socket.id);
-    });
-  });
-
-  return io;
+    return io   
 }
 
-function getIO() {
-  if (!io) throw new Error("Socket.io not initialized");
-  return io;
+function getIO(){   
+    if (!io) throw new Error("Socket.io not initialized")
+    return io
 }
 
-module.exports = { init, getIO };
+module.exports = { init, getIO }    
