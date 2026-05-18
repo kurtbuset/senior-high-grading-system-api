@@ -1,16 +1,28 @@
 openapi: 3.0.0
 info:
   title: Senior High Grading System API
-  description: API for managing senior high school grading system including accounts, students, subjects, enrollments, quizzes, and grades
+  description: |
+    A comprehensive RESTful API for managing senior high school grading system.
+    Built with Node.js, Express, Sequelize ORM, and MySQL.
+
+    Features:
+    - JWT-based authentication with role-based access control
+    - User management for multiple roles (SuperAdmin, Principal, Registrar, Teacher, Student)
+    - Subject management (Core, Applied, and Specialized subjects)
+    - Student registration and enrollment
+    - Quiz and assessment management
+    - Grade computation and management
+    - Homeroom management
+    - Real-time notifications via Socket.io
   version: 1.0.0
   contact:
-    name: API Support
+    name: Development Team
     email: support@example.com
 
 servers:
   - url: http://localhost:4000
-    description: Development server
-  - url: https://api.production.com
+    description: Local development server
+  - url: https://your-production-url.com
     description: Production server
 
 tags:
@@ -126,8 +138,10 @@ components:
           type: integer
         address:
           type: string
-        school_id:
+        lrn_number:
           type: string
+          maxLength: 12
+          description: Learner Reference Number
         created:
           type: string
           format: date-time
@@ -667,7 +681,6 @@ paths:
                 - sex
                 - email
                 - homeroom_id
-                - school_id
               properties:
                 firstName:
                   type: string
@@ -683,9 +696,10 @@ paths:
                   type: integer
                 address:
                   type: string
-                school_id:
+                lrn_number:
                   type: string
-                  maxLength: 20
+                  maxLength: 12
+                  description: Learner Reference Number (optional)
       responses:
         "200":
           description: Student created successfully
@@ -715,6 +729,72 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Student"
+
+    put:
+      tags:
+        - Students
+      summary: Update student information
+      description: Update student details (Registrar only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                sex:
+                  type: string
+                  enum: [M, F]
+                email:
+                  type: string
+                  format: email
+                homeroom_id:
+                  type: integer
+                address:
+                  type: string
+      responses:
+        "200":
+          description: Student updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+    delete:
+      tags:
+        - Students
+      summary: Delete student
+      description: Delete a student record (Registrar only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
 
   /students/egrades/{id}:
     get:
