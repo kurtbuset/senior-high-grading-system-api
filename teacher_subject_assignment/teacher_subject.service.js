@@ -29,7 +29,7 @@ async function updatePercentages(teacher_subject_id, value) {
     },
     {
       where: { id: teacher_subject_id },
-    }
+    },
   );
 }
 
@@ -147,7 +147,7 @@ async function saveAssignment(params) {
 
   // 3️⃣ Validate curriculum subject
   const curriculumSubject = await db.Curriculum_Subject.findByPk(
-    params.curriculum_subject_id
+    params.curriculum_subject_id,
   );
   if (!curriculumSubject) {
     throw `CurriculumSubject with id ${params.curriculum_subject_id} not found`;
@@ -179,6 +179,8 @@ async function saveAssignment(params) {
   }
 
   // 7️⃣ Handle assign or update logic
+  let result;
+
   if (params.action === "assign") {
     if (existing) {
       throw `This subject is already assigned to the homeroom (id: ${params.homeroom_id}).`;
@@ -195,7 +197,11 @@ async function saveAssignment(params) {
       "Academic Track (except Immersion)": { ww: 25, pt: 45, qa: 30 },
     };
 
-    const { ww, pt, qa } = defaultPercents[subject.type] || { ww: 25, pt: 50, qa: 25 };
+    const { ww, pt, qa } = defaultPercents[subject.type] || {
+      ww: 25,
+      pt: 50,
+      qa: 25,
+    };
 
     console.log(subject.type);
 
@@ -224,15 +230,48 @@ async function saveAssignment(params) {
       enrollments.push(enrollment);
     }
 
-    return {
+    result = {
       message: "Subject successfully assigned to teacher.",
       teacherSubject: basicDetails(teacherSubject),
       enrolled_students: enrollments.length,
     };
+  } else if (params.action === "update") {
+    // 8️⃣ Handle update action
+    if (!existing) {
+      throw `No existing assignment found for this subject and homeroom. Use 'assign' instead.`;
+    }
+
+    // Update the teacher assignment
+    await db.Teacher_Subject_Assignment.update(
+      {
+        teacher_id: params.teacher_id,
+      },
+      {
+        where: {
+          curriculum_subject_id: params.curriculum_subject_id,
+          homeroom_id: params.homeroom_id,
+        },
+      },
+    );
+
+    // Fetch the updated record
+    const updatedAssignment = await db.Teacher_Subject_Assignment.findOne({
+      where: {
+        curriculum_subject_id: params.curriculum_subject_id,
+        homeroom_id: params.homeroom_id,
+      },
+    });
+
+    result = {
+      message: "Teacher assignment successfully updated.",
+      teacherSubject: basicDetails(updatedAssignment),
+    };
+  } else {
+    // 9️⃣ Invalid action
+    throw `Invalid action type. Use 'assign' or 'update'.`;
   }
 
-  // 9️⃣ Invalid action
-  throw `Invalid action type. Use 'assign' or 'update'.`;
+  return result;
 }
 
 function basicDetails(teacherSubject) {

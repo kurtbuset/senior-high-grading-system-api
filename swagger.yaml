@@ -1,0 +1,1314 @@
+openapi: 3.0.0
+info:
+  title: Senior High Grading System API
+  description: API for managing senior high school grading system including accounts, students, subjects, enrollments, quizzes, and grades
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:4000
+    description: Development server
+  - url: https://api.production.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: Accounts
+    description: Account management operations
+  - name: Students
+    description: Student management operations
+  - name: Subjects
+    description: Subject management operations
+  - name: Teacher Subject Assignment
+    description: Teacher-subject assignment operations
+  - name: Enrollments
+    description: Student enrollment operations
+  - name: Quizzes
+    description: Quiz and assessment management
+  - name: Quiz Scores
+    description: Quiz score management
+  - name: Final Grades
+    description: Final grade management
+  - name: Curriculum Subjects
+    description: Curriculum subject operations
+  - name: Homerooms
+    description: Homeroom management
+  - name: Grade Level
+    description: Grade level operations
+  - name: School Year
+    description: School year management
+  - name: Strands
+    description: Academic strand management
+  - name: Subject Quarter Locks
+    description: Subject quarter locking operations
+  - name: Notifications
+    description: Notification management
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        msg:
+          type: string
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [SuperAdmin, Principal, Registrar, Teacher, Student]
+        isActive:
+          type: boolean
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        jwtToken:
+          type: string
+
+    Student:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        sex:
+          type: string
+          enum: [M, F]
+        email:
+          type: string
+          format: email
+        homeroom_id:
+          type: integer
+        address:
+          type: string
+        school_id:
+          type: string
+        created:
+          type: string
+          format: date-time
+
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            [
+              Core,
+              Applied,
+              Specialized_GAS,
+              Specialized_ABM,
+              Specialized_HUMMS,
+              Specialized_STEM,
+            ]
+
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: integer
+        teacher_subject_id:
+          type: integer
+        type:
+          type: string
+          enum: [Written Work, Performance Tasks, Quarterly Assessment]
+        quarter:
+          type: string
+          enum: [First Quarter, Second Quarter]
+        description:
+          type: string
+        hps:
+          type: number
+          description: Highest Possible Score
+
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        teacher_subject_id:
+          type: integer
+        created:
+          type: string
+          format: date-time
+
+    FinalGrade:
+      type: object
+      properties:
+        id:
+          type: integer
+        enrollment_id:
+          type: integer
+        final_grade:
+          type: number
+        quarter:
+          type: string
+          enum: [First Quarter, Second Quarter]
+
+paths:
+  /accounts/authenticate:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user
+      description: Login with username and password to receive JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: refreshToken=abcde12345; Path=/; HttpOnly
+        "400":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /accounts/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get a new JWT token using refresh token from cookie
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /accounts/revoke-token:
+    post:
+      tags:
+        - Authentication
+      summary: Revoke refresh token
+      description: Logout by revoking the refresh token
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Token revoked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /accounts/verify-email:
+    post:
+      tags:
+        - Authentication
+      summary: Verify email address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+
+  /accounts/forgot-password:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Password reset email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+
+  /accounts/validate-reset-token:
+    post:
+      tags:
+        - Authentication
+      summary: Validate password reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+      responses:
+        "200":
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+
+  /accounts/reset-password:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+                - confirmPassword
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                  minLength: 6
+                confirmPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: Get all accounts
+      description: Retrieve all user accounts (SuperAdmin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      tags:
+        - Accounts
+      summary: Create new account
+      description: Create a new user account (SuperAdmin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - email
+                - password
+                - confirmPassword
+                - role
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+                confirmPassword:
+                  type: string
+                role:
+                  type: string
+                  enum: [SuperAdmin, Registrar, Principal, Teacher]
+      responses:
+        "200":
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /accounts/teachers:
+    get:
+      tags:
+        - Accounts
+      summary: Get all teachers
+      description: Retrieve all teacher accounts
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of teachers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+
+  /accounts/{id}:
+    get:
+      tags:
+        - Accounts
+      summary: Get account by ID
+      description: Retrieve a specific account (SuperAdmin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "404":
+          description: Account not found
+
+    put:
+      tags:
+        - Accounts
+      summary: Update account
+      description: Update account details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                isActive:
+                  type: boolean
+                password:
+                  type: string
+                  minLength: 6
+                confirmPassword:
+                  type: string
+                role:
+                  type: string
+                  enum: [SuperAdmin, Teacher, Principal, Registrar, Student]
+      responses:
+        "200":
+          description: Account updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+    delete:
+      tags:
+        - Accounts
+      summary: Delete account
+      description: Delete a user account
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Account deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+
+  /accounts/update-password/{id}:
+    put:
+      tags:
+        - Accounts
+      summary: Update account password
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+                - confirmPassword
+              properties:
+                password:
+                  type: string
+                  minLength: 6
+                confirmPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /students:
+    get:
+      tags:
+        - Students
+      summary: Get all students
+      description: Retrieve all students (Registrar only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Student"
+
+    post:
+      tags:
+        - Students
+      summary: Create new student
+      description: Register a new student (Registrar only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - sex
+                - email
+                - homeroom_id
+                - school_id
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                sex:
+                  type: string
+                  enum: [M, F]
+                email:
+                  type: string
+                  format: email
+                homeroom_id:
+                  type: integer
+                address:
+                  type: string
+                school_id:
+                  type: string
+                  maxLength: 20
+      responses:
+        "200":
+          description: Student created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+  /students/{id}:
+    get:
+      tags:
+        - Students
+      summary: Get student information
+      description: Retrieve detailed student information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+  /students/egrades/{id}:
+    get:
+      tags:
+        - Students
+      summary: Get student subjects and grades
+      description: Retrieve student's enrolled subjects and their grades
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student subjects and grades
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /subjects:
+    get:
+      tags:
+        - Subjects
+      summary: Get all subjects
+      description: Retrieve all subjects (Principal only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+
+    post:
+      tags:
+        - Subjects
+      summary: Create new subject
+      description: Create a new subject (SuperAdmin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - name
+                - type
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    [
+                      Core,
+                      Applied,
+                      Specialized_GAS,
+                      Specialized_ABM,
+                      Specialized_HUMMS,
+                      Specialized_STEM,
+                    ]
+      responses:
+        "200":
+          description: Subject created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+
+  /enrollments:
+    post:
+      tags:
+        - Enrollments
+      summary: Create enrollment
+      description: Enroll a student in a subject (Registrar only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - student_id
+                - teacher_subject_id
+              properties:
+                student_id:
+                  type: integer
+                teacher_subject_id:
+                  type: integer
+      responses:
+        "200":
+          description: Enrollment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+
+  /enrollments/{id}:
+    get:
+      tags:
+        - Enrollments
+      summary: Get students by teacher subject
+      description: Get all students enrolled in a specific teacher's subject
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Teacher subject ID
+      responses:
+        "200":
+          description: List of enrolled students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+    put:
+      tags:
+        - Enrollments
+      summary: Update student enrollment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Enrollment updated successfully
+
+  /enrollments/enrolled/{id}:
+    get:
+      tags:
+        - Enrollments
+      summary: Get enrolled students
+      description: Get all enrolled students for a specific context
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of enrolled students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /quizzes:
+    post:
+      tags:
+        - Quizzes
+      summary: Add new quiz
+      description: Create a new quiz or assessment (Teacher only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - teacher_subject_id
+                - type
+                - quarter
+                - hps
+              properties:
+                teacher_subject_id:
+                  type: integer
+                type:
+                  type: string
+                  enum: [Written Work, Performance Tasks, Quarterly Assessment]
+                quarter:
+                  type: string
+                  enum: [First Quarter, Second Quarter]
+                description:
+                  type: string
+                  maxLength: 255
+                hps:
+                  type: number
+                  minimum: 1
+      responses:
+        "200":
+          description: Quiz created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+
+  /quizzes/{id}:
+    get:
+      tags:
+        - Quizzes
+      summary: Get quizzes
+      description: Get quizzes for a teacher subject with optional filters
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Teacher subject ID
+        - name: quarter
+          in: query
+          schema:
+            type: string
+            enum: [First Quarter, Second Quarter]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [Written Work, Performance Tasks, Quarterly Assessment]
+      responses:
+        "200":
+          description: List of quizzes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Quiz"
+
+    put:
+      tags:
+        - Quizzes
+      summary: Update quiz
+      description: Update quiz details (Teacher only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - hps
+              properties:
+                hps:
+                  type: number
+                  minimum: 1
+                description:
+                  type: string
+                  maxLength: 255
+      responses:
+        "200":
+          description: Quiz updated successfully
+
+    delete:
+      tags:
+        - Quizzes
+      summary: Delete quiz
+      description: Delete a quiz (Teacher only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Quiz deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+
+  /quizzes/quarterly-grade-sheet/{id}:
+    get:
+      tags:
+        - Quizzes
+      summary: Get quarterly grade sheet
+      description: Get grade sheet for a specific quarter
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Teacher subject ID
+        - name: quarter
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [First Quarter, Second Quarter]
+      responses:
+        "200":
+          description: Quarterly grade sheet
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /quizzes/semestral-final-grade/{id}:
+    get:
+      tags:
+        - Quizzes
+      summary: Get semestral final grade
+      description: Get final grades for the semester
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Teacher subject ID
+      responses:
+        "200":
+          description: Semestral final grades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /final-grades:
+    post:
+      tags:
+        - Final Grades
+      summary: Create final grades
+      description: Submit final grades for students
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - enrollment_id
+                  - final_grade
+                  - quarter
+                properties:
+                  enrollment_id:
+                    type: integer
+                  final_grade:
+                    type: number
+                  quarter:
+                    type: string
+                    enum: [First Quarter, Second Quarter]
+      responses:
+        "200":
+          description: Final grades created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FinalGrade"
+
+  /final-grades/{id}:
+    get:
+      tags:
+        - Final Grades
+      summary: Get subjects locking history
+      description: Get the locking history for subjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subjects locking history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /teacher-subject-assignment:
+    get:
+      tags:
+        - Teacher Subject Assignment
+      summary: Get teacher subject assignments
+      description: Retrieve teacher-subject assignments
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of teacher subject assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /quiz-scores:
+    get:
+      tags:
+        - Quiz Scores
+      summary: Get quiz scores
+      description: Retrieve quiz scores
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of quiz scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /curriculum-subjects:
+    get:
+      tags:
+        - Curriculum Subjects
+      summary: Get curriculum subjects
+      description: Retrieve curriculum subjects
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of curriculum subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /homerooms:
+    get:
+      tags:
+        - Homerooms
+      summary: Get homerooms
+      description: Retrieve all homerooms
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of homerooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /grade-level:
+    get:
+      tags:
+        - Grade Level
+      summary: Get grade levels
+      description: Retrieve all grade levels
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of grade levels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /school-year:
+    get:
+      tags:
+        - School Year
+      summary: Get school years
+      description: Retrieve all school years
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of school years
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /strand:
+    get:
+      tags:
+        - Strands
+      summary: Get strands
+      description: Retrieve all academic strands
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of strands
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /subject-quarter-locks:
+    get:
+      tags:
+        - Subject Quarter Locks
+      summary: Get subject quarter locks
+      description: Retrieve subject quarter lock status
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of subject quarter locks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: Get notifications
+      description: Retrieve all notifications
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object

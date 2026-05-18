@@ -11,7 +11,7 @@ function model(sequelize){
         key: "id",
       }
     },
-    type: { type: DataTypes.ENUM('Written Work', 'Performance Tasks', 'Quarterly Assesment'), allowNull: false },
+    type: { type: DataTypes.ENUM('Written Work', 'Performance Tasks', 'Quarterly Assessment'), allowNull: false },
     quarter: { type: DataTypes.ENUM('First Quarter', 'Second Quarter'), allowNull: false },
     description: { type: DataTypes.STRING },
     hps: { type: DataTypes.INTEGER }

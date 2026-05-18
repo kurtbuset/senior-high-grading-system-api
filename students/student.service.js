@@ -7,12 +7,21 @@ module.exports = {
   getSubjectAndGrades,
   getStudentInfo,
   getAllStudents,
+  update,
+  deleteStudent,
 };
 
 async function getAllStudents() {
   try {
     const students = await db.Student.findAll({
-      attributes: ["school_id", "sex"], // student table columns
+      attributes: [
+        "id",
+        "school_id",
+        "sex",
+        "homeroom_id",
+        "address",
+        "account_id",
+      ], // student table columns
       include: [
         {
           model: db.Account,
@@ -251,7 +260,7 @@ async function getSubjectAndGrades(account_id) {
             ? Math.round((firstQuarter + secondQuarter) / 2)
             : null,
       };
-    })
+    }),
   );
 
   // ✅ Return school year together with results
@@ -262,16 +271,8 @@ async function getSubjectAndGrades(account_id) {
 }
 
 async function create(params) {
-  const {
-    firstName,
-    lastName,
-    email,
-    sex,
-    homeroom_id,
-    address,
-    lrn_number,
-    school_id,
-  } = params;
+  const { firstName, lastName, email, sex, homeroom_id, address, lrn_number } =
+    params;
 
   // 1. Validate homeroom
   const homeroom = await db.HomeRoom.findByPk(homeroom_id);
@@ -285,11 +286,8 @@ async function create(params) {
     throw `An account with the email "${email}" already exists.`;
   }
 
-  // 3. Validate school_id uniqueness
-  const existingSchoolId = await db.Student.findOne({ where: { school_id } });
-  if (existingSchoolId) {
-    throw `Student with school_id "${school_id}" already exists.`;
-  }
+  // 3. Auto-generate school_id
+  const school_id = await generateSchoolId();
 
   // 4. Use school_id as password
   const plainPassword = school_id;
@@ -344,11 +342,11 @@ async function create(params) {
   };
 }
 
-// helper function
+// helper function to auto-generate school_id
 async function generateSchoolId() {
   const year = new Date().getFullYear();
 
-  // Count how many students exist this year
+  // Find the latest student with this year's prefix
   const latest = await db.Student.findAll({
     where: {
       school_id: {
@@ -360,15 +358,125 @@ async function generateSchoolId() {
   });
 
   let nextNumber = 1;
-  if (latest.length) {
-    const lastId = latest[0].school_id.split("-")[1]; // e.g. 00001
-    nextNumber = parseInt(lastId) + 1;
+  if (latest.length > 0) {
+    const lastId = latest[0].school_id.split("-")[1]; // e.g. "00001"
+    nextNumber = parseInt(lastId, 10) + 1;
   }
 
-  return `${year}-${String(nextNumber).padStart(5, "0")}`; // e.g. 2025-00001
+  return `${year}-${String(nextNumber).padStart(5, "0")}`; // e.g. "2025-00001"
 }
 
 function basicDetails(student) {
   const { id, firstname, lastname } = student;
   return { id, firstname, lastname };
+}
+
+async function update(studentId, params) {
+  const student = await db.Student.findByPk(studentId);
+  if (!student) {
+    throw `Student with id ${studentId} not found`;
+  }
+
+  // Update account fields if provided
+  const accountUpdates = {};
+  if (params.firstName) accountUpdates.firstName = params.firstName;
+  if (params.lastName) accountUpdates.lastName = params.lastName;
+  if (params.email) {
+    // Check if email is already taken by another account
+    const existingEmail = await db.Account.findOne({
+      where: { email: params.email },
+    });
+    if (existingEmail && existingEmail.id !== student.account_id) {
+      throw `Email "${params.email}" is already in use`;
+    }
+    accountUpdates.email = params.email;
+  }
+
+  if (Object.keys(accountUpdates).length > 0) {
+    await db.Account.update(accountUpdates, {
+      where: { id: student.account_id },
+    });
+  }
+
+  // Update student fields if provided
+  const studentUpdates = {};
+  if (params.sex) studentUpdates.sex = params.sex;
+  if (params.homeroom_id) {
+    // Validate homeroom exists
+    const homeroom = await db.HomeRoom.findByPk(params.homeroom_id);
+    if (!homeroom) {
+      throw `Homeroom with id ${params.homeroom_id} not found`;
+    }
+    studentUpdates.homeroom_id = params.homeroom_id;
+  }
+  if (params.address !== undefined) studentUpdates.address = params.address;
+  if (params.school_id) {
+    // Check if school_id is already taken by another student
+    const existingSchoolId = await db.Student.findOne({
+      where: { school_id: params.school_id },
+    });
+    if (existingSchoolId && existingSchoolId.id !== student.id) {
+      throw `School ID "${params.school_id}" is already in use`;
+    }
+    studentUpdates.school_id = params.school_id;
+  }
+
+  if (Object.keys(studentUpdates).length > 0) {
+    await db.Student.update(studentUpdates, {
+      where: { id: studentId },
+    });
+  }
+
+  // Fetch and return updated student
+  const updatedStudent = await db.Student.findByPk(studentId, {
+    include: [
+      {
+        model: db.Account,
+        attributes: ["firstName", "lastName", "email"],
+      },
+      {
+        model: db.HomeRoom,
+        as: "homeroom",
+        attributes: ["section"],
+        include: [
+          {
+            model: db.Grade_Level,
+            as: "grade_level",
+            attributes: ["level"],
+          },
+          {
+            model: db.Strand,
+            as: "strand",
+            attributes: ["name"],
+          },
+        ],
+      },
+    ],
+  });
+
+  return updatedStudent;
+}
+
+async function deleteStudent(studentId) {
+  const student = await db.Student.findByPk(studentId);
+  if (!student) {
+    throw `Student with id ${studentId} not found`;
+  }
+
+  // Delete enrollments first (foreign key constraint)
+  await db.Enrollment.destroy({
+    where: { student_id: studentId },
+  });
+
+  // Delete student record
+  await db.Student.destroy({
+    where: { id: studentId },
+  });
+
+  // Delete associated account
+  await db.Account.destroy({
+    where: { id: student.account_id },
+  });
+
+  return { message: "Student deleted successfully" };
 }

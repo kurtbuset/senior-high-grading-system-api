@@ -1,13 +1,13 @@
 const express = require("express");
 const authorize = require("../_middleware/authorize");
 const router = express.Router();
-const Role = require('../_helpers/role')
+const Role = require("../_helpers/role");
 const Joi = require("joi");
-const gradeLevelService = require('../grade_level/grade_level.service')
+const gradeLevelService = require("../grade_level/grade_level.service");
 const validateRequest = require("../_middleware/validate-request");
 
-router.post('/', authorize(Role.Registrar), createSchema, create)
-router.get("/", authorize(Role.Principal), getGradeLevels);
+router.post("/", authorize(Role.Registrar), createSchema, create);
+router.get("/", authorize(), getGradeLevels);
 
 module.exports = router;
 
@@ -18,18 +18,17 @@ function getGradeLevels(req, res, next) {
     .catch(next);
 }
 
-function createSchema(req, res, next){
+function createSchema(req, res, next) {
   const schema = Joi.object({
-    level: Joi.number().integer().required()
-  })
+    level: Joi.number().integer().required(),
+  });
 
-  validateRequest(req, next, schema)
+  validateRequest(req, next, schema);
 }
 
-function create(req, res, next){  
+function create(req, res, next) {
   gradeLevelService
     .create(req.body)
     .then((result) => res.json(result))
-    .catch(next)
-} 
-
+    .catch(next);
+}

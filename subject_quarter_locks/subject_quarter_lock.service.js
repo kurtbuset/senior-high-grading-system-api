@@ -10,6 +10,7 @@ module.exports = {
   lockSubject,
   requestToUnlock,
   updateSubjectStatus,
+  getPendingUnlockRequests,
 };
 
 async function updateSubjectStatus(id, { status, quarter }) {
@@ -70,4 +71,71 @@ async function lockSubject({ teacher_subject_id, quarter }) {
   }
 
   return lock;
+}
+
+async function getPendingUnlockRequests() {
+  const requests = await db.Subject_Quarter_Lock.findAll({
+    where: { status: "PENDING" },
+    include: [
+      {
+        model: db.Teacher_Subject_Assignment,
+        as: "assignment",
+        include: [
+          {
+            model: db.Account,
+            as: "teacher",
+            attributes: ["firstName", "lastName"],
+          },
+          {
+            model: db.Curriculum_Subject,
+            as: "curriculum_subject",
+            include: [
+              {
+                model: db.Subject,
+                as: "subject",
+                attributes: ["name"],
+              },
+            ],
+          },
+          {
+            model: db.HomeRoom,
+            as: "homeroom",
+            attributes: ["section"],
+            include: [
+              {
+                model: db.Grade_Level,
+                as: "grade_level",
+                attributes: ["level"],
+              },
+              {
+                model: db.School_Year,
+                as: "school_year",
+                attributes: ["school_year"],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    order: [["id", "DESC"]],
+  });
+
+  // Transform the data to match frontend expectations
+  return requests.map((request) => ({
+    id: request.id,
+    teacher_subject_id: request.teacher_subject_id,
+    quarter: request.quarter,
+    status: request.status,
+    reason_to_unlock: request.reason_to_unlock,
+    lock_counts: request.lock_counts,
+    subject_name:
+      request.assignment?.curriculum_subject?.subject?.name || "N/A",
+    teacher_name: request.assignment?.teacher
+      ? `${request.assignment.teacher.firstName} ${request.assignment.teacher.lastName}`
+      : "N/A",
+    grade_level: request.assignment?.homeroom?.grade_level?.level || 0,
+    section: request.assignment?.homeroom?.section || "N/A",
+    school_year:
+      request.assignment?.homeroom?.school_year?.school_year || "N/A",
+  }));
 }

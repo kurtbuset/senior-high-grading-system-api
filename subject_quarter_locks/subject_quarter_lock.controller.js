@@ -7,38 +7,44 @@ const validateRequest = require("../_middleware/validate-request");
 const subjectQuarterLockService = require("./subject_quarter_lock.service");
 
 router.post("/", authorize(Role.Teacher), lockSubjectSchema, lockSubject);
-router.put("/:id", authorize(Role.Registrar), updateSubjectStatus)
-router.put("/request/:id", authorize(Role.Teacher), requestToUnlock)
+router.get("/pending", authorize(Role.Registrar), getPendingUnlockRequests);
+router.put("/:id", authorize(Role.Registrar), updateSubjectStatus);
+router.put("/request/:id", authorize(Role.Teacher), requestToUnlock);
 
 module.exports = router;
 
-function updateSubjectStatus(req, res, next){
+function getPendingUnlockRequests(req, res, next) {
+  subjectQuarterLockService
+    .getPendingUnlockRequests()
+    .then((requests) => res.json(requests))
+    .catch(next);
+}
+
+function updateSubjectStatus(req, res, next) {
   subjectQuarterLockService
     .updateSubjectStatus(req.params.id, req.body)
-    .then(_ => res.json({ msg: "record updated successfully"}))
-    .catch(next)
+    .then((_) => res.json({ msg: "record updated successfully" }))
+    .catch(next);
 }
-  
 
-function requestToUnlock(req, res, next){
+function requestToUnlock(req, res, next) {
   subjectQuarterLockService
     .requestToUnlock(req.params.id, req.body)
-    .then(_ => res.json({ msg: "record updated successfully"}))
-    .catch(next)  
+    .then((_) => res.json({ msg: "record updated successfully" }))
+    .catch(next);
 }
 
-
-function lockSubjectSchema(req, res, next) {  
-const schema = Joi.object({
+function lockSubjectSchema(req, res, next) {
+  const schema = Joi.object({
     teacher_subject_id: Joi.number().required(),
     quarter: Joi.string().valid("First Quarter", "Second Quarter").required(),
-  })
-  validateRequest(req, next, schema)
+  });
+  validateRequest(req, next, schema);
 }
 
-function lockSubject(req, res, next){
+function lockSubject(req, res, next) {
   subjectQuarterLockService
     .lockSubject(req.body)
-    .then(_ => res.json({ msg: "record added successfully"}))
-    .catch(next)
+    .then((_) => res.json({ msg: "record added successfully" }))
+    .catch(next);
 }

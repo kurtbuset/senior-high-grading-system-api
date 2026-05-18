@@ -70,7 +70,7 @@ function addQuizSchema(req, res, next) {
   const schema = Joi.object({
     teacher_subject_id: Joi.number().required(),
     type: Joi.string()
-      .valid("Written Work", "Performance Tasks", "Quarterly Assesment")
+      .valid("Written Work", "Performance Tasks", "Quarterly Assessment")
       .required(),
     quarter: Joi.string().valid("First Quarter", "Second Quarter").required(),
     description: Joi.string().allow("").max(255).optional(),

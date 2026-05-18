@@ -15,12 +15,12 @@ async function deleteQuiz(id) {
 }
 
 async function addQuiz(params) {
-  if (params.type === "Quarterly Assesment") {
+  if (params.type === "Quarterly Assessment") {
     const existing = await db.Quiz.findOne({
       where: {
         teacher_subject_id: params.teacher_subject_id,
         quarter: params.quarter,
-        type: "Quarterly Assesment",
+        type: "Quarterly Assessment",
       },
     });
 
@@ -98,13 +98,13 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
   const weightMap = {
     "Written Work": custom_ww_percent / 100,
     "Performance Tasks": custom_pt_percent / 100,
-    "Quarterly Assesment": custom_qa_percent / 100,
+    "Quarterly Assessment": custom_qa_percent / 100,
   };
 
   const quizTypes = [
     "Written Work",
     "Performance Tasks",
-    "Quarterly Assesment",
+    "Quarterly Assessment",
   ];
 
   // Fetch HPS and Quiz IDs in parallel
@@ -172,7 +172,7 @@ async function getQuarterlyGradeSheet(teacher_subject_id, { quarter }) {
     students.map(async (enrollment) => {
       const ww = await computeScores(enrollment.id, "Written Work");
       const pt = await computeScores(enrollment.id, "Performance Tasks");
-      const qa = await computeScores(enrollment.id, "Quarterly Assesment");
+      const qa = await computeScores(enrollment.id, "Quarterly Assessment");
 
       const initialGrade = [ww.weighted, pt.weighted, qa.weighted]
         .map(Number)

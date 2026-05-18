@@ -26,7 +26,7 @@ async function getStudentsAndRawScores(teacher_subject_id) {
           (q) => q.type === "Performance Tasks"
         ),
         quarterlyAssessments: quarterQuizzes.filter(
-          (q) => q.type === "Quarterly Assesment"
+          (q) => q.type === "Quarterly Assessment"
         ),
       };
     }

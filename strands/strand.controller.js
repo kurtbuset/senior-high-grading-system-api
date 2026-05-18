@@ -6,7 +6,7 @@ const Joi = require("joi");
 const strandService = require("./strand.service");
 const validateRequest = require("../_middleware/validate-request");
 
-router.get("/", authorize(Role.Principal), getStrands);
+router.get("/", authorize(), getStrands);
 router.post("/", authorize(Role.Registrar), createSchema, create);
 
 module.exports = router;
